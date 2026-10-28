@@ -12,7 +12,10 @@ import {
   exportDatabaseAsJSON,
   importDatabaseFromJSON,
   resetToSampleData,
+  getBackupInfo,
+  restorePreviousData,
 } from '../data/storage.ts';
+import { IMPORT_LIMITS } from '../lib/validation.ts';
 import { ConfirmModal } from '../components/ConfirmModal.tsx';
 import { getTodayDateString } from '../lib/dateUtils.ts';
 import { PLACEHOLDERS } from '../config/placeholders.ts';
@@ -44,6 +47,25 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
     null
   );
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const [backupTick, setBackupTick] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const backupInfo = React.useMemo(() => getBackupInfo(), [backupTick, db]);
+  const restoreTriggerRef = useRef<HTMLButtonElement>(null);
+
+  const handleConfirmRestore = () => {
+    setIsProcessing(true);
+    const result = restorePreviousData();
+    setIsProcessing(false);
+    setIsRestoreModalOpen(false);
+    setBackupTick((t) => t + 1);
+    setStatusMessage(
+      result.success
+        ? { type: 'success', text: 'Previous data restored. The data it replaced is now the recovery copy.' }
+        : { type: 'error', text: `Restore failed: ${result.error}` }
+    );
+  };
 
   // Trigger refs for returning focus
   const resetTriggerRef = useRef<HTMLButtonElement>(null);
@@ -84,6 +106,15 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
   const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > IMPORT_LIMITS.maxFileBytes) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Import failed: file is larger than 2 MB. Existing data remains unchanged.',
+      });
+      e.target.value = '';
+      return;
+    }
 
     setPendingFileName(file.name);
 
@@ -323,6 +354,28 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
         </div>
       </div>
 
+      {/* Recovery copy (kept in this browser only) */}
+      {backupInfo && backupInfo.restorable && (
+        <div className="bg-white p-5 rounded-lg border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-sm font-bold text-slate-900">Restore Previous Data</h2>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              A copy of your data from before the last {backupInfo.reason === 'import' ? 'import' : backupInfo.reason === 'reset' ? 'reset' : 'restore'} is
+              kept on this browser (saved {new Date(backupInfo.savedAt).toLocaleString()}). Only one copy is kept.
+            </p>
+          </div>
+          <GlassButton
+            ref={restoreTriggerRef}
+            type="button"
+            onClick={() => setIsRestoreModalOpen(true)}
+            tone="blue" className="py-2.5 px-4 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5" wrapperClassName="flex shrink-0"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Restore Previous Data</span>
+          </GlassButton>
+        </div>
+      )}
+
       {/* Confirmation Modal: IMPORT OVERWRITE */}
       <ConfirmModal
         isOpen={isImportModalOpen}
@@ -374,6 +427,23 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
         triggerElementRef={resetTriggerRef}
         onConfirm={handleConfirmReset}
         onCancel={() => setIsResetModalOpen(false)}
+      />
+      <ConfirmModal
+        isOpen={isRestoreModalOpen}
+        title="Restore Previous Data?"
+        message={
+          <p className="text-xs text-slate-700">
+            This replaces what is on this device now with the saved previous copy. The current data becomes the
+            recovery copy, so you can switch back.
+          </p>
+        }
+        confirmLabel="Yes, Restore Previous Data"
+        cancelLabel="Cancel"
+        isDestructive={true}
+        isProcessing={isProcessing}
+        triggerElementRef={restoreTriggerRef}
+        onConfirm={handleConfirmRestore}
+        onCancel={() => setIsRestoreModalOpen(false)}
       />
     </div>
   );
