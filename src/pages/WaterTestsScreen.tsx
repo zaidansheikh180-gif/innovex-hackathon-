@@ -109,7 +109,7 @@ export const WaterTestsScreen: React.FC<WaterTestsScreenProps> = ({ db, currentR
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             <FlaskConical className="w-5 h-5 text-teal-700" />
-            <span>Water Quality Test Records (FR-007)</span>
+            <span>Water Quality Test Records</span>
           </h1>
           <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded border border-slate-200">
             {currentRole === 'operator' ? 'Operator View' : 'Resident View'}
@@ -128,7 +128,7 @@ export const WaterTestsScreen: React.FC<WaterTestsScreenProps> = ({ db, currentR
         </div>
         <p className="leading-relaxed">
           {PLACEHOLDERS.disclaimers.safetyNotice} This log reflects text entered from external testing
-          authorities. Neither this software nor village panchayat staff automatically certifes drinking water
+          authorities. Neither this software nor village panchayat staff automatically certifies drinking water
           potability.
         </p>
       </div>
