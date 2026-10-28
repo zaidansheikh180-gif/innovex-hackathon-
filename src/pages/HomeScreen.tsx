@@ -47,9 +47,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
           {PLACEHOLDERS.appTagline}
         </p>
-        <p className="text-xs text-slate-500">
-          Built for transparent village water distribution records and community complaint tracking.
-        </p>
       </div>
 
       {/* Role Selection (Demo Switch) */}
