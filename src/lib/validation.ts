@@ -3,7 +3,17 @@
  * Validation helpers for form inputs, text length limits, and import files.
  */
 
-import { AppDatabase, DayOfWeek, ReportType, ComplaintStatus } from '../data/types.ts';
+import {
+  AppDatabase,
+  DayOfWeek,
+  ReportType,
+  ComplaintStatus,
+  ScheduleEntry,
+  Notice,
+  SupplyRecord,
+  Report,
+  WaterTestResult,
+} from '../data/types.ts';
 import { PLACEHOLDERS } from '../config/placeholders.ts';
 
 const VALID_DAYS: DayOfWeek[] = [
@@ -69,8 +79,14 @@ export function validateDate(dateStr: string): { isValid: boolean; error?: strin
   if (!regex.test(dateStr.trim())) {
     return { isValid: false, error: 'Date must be in YYYY-MM-DD format.' };
   }
-  const parsed = new Date(dateStr);
-  if (isNaN(parsed.getTime())) {
+  const [y, m, d] = dateStr.trim().split('-').map(Number);
+  const parsed = new Date(Date.UTC(y, m - 1, d));
+  if (
+    isNaN(parsed.getTime()) ||
+    parsed.getUTCFullYear() !== y ||
+    parsed.getUTCMonth() !== m - 1 ||
+    parsed.getUTCDate() !== d
+  ) {
     return { isValid: false, error: 'Date is invalid.' };
   }
   return { isValid: true };
@@ -99,133 +115,285 @@ export function validateText(
   return { isValid: true, sanitized };
 }
 
+/** Resource limits applied to imported files and to data read back from browser storage. */
+export const IMPORT_LIMITS = {
+  maxFileBytes: 2 * 1024 * 1024,
+  maxJsonChars: 2 * 1024 * 1024,
+  maxAreas: 200,
+  maxScheduleEntries: 5000,
+  maxNotices: 5000,
+  maxSupplyRecords: 20000,
+  maxReports: 20000,
+  maxWaterTests: 5000,
+  maxIdLength: 100,
+  maxAreaName: 100,
+  maxDurationMinutes: 525600, // one year
+} as const;
+
+const ID_REGEX = /^[A-Za-z0-9_-]+$/;
+const ISO_TS_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?(Z|[+-]\d{2}:\d{2})$/;
+// eslint-disable-next-line no-control-regex
+const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/;
+
+type Rec = Record<string, unknown>;
+type Fail = { ok: false; error: string };
+
+function isPlainObject(v: unknown): v is Rec {
+  return !!v && typeof v === 'object' && !Array.isArray(v) && Object.getPrototypeOf(v) === Object.prototype;
+}
+
+function checkKeys(o: Rec, allowed: string[], label: string): string | null {
+  for (const k of Object.keys(o)) {
+    if (!allowed.includes(k)) return `${label} has an unexpected field "${k.slice(0, 40)}".`;
+  }
+  return null;
+}
+
+function checkId(v: unknown, label: string): string | null {
+  if (typeof v !== 'string' || v.length === 0 || v.length > IMPORT_LIMITS.maxIdLength || !ID_REGEX.test(v)) {
+    return `${label} has an invalid id.`;
+  }
+  return null;
+}
+
+function checkString(v: unknown, label: string, max: number, required: boolean): string | null {
+  if (typeof v !== 'string') return `${label} must be text.`;
+  if (v.length > max) return `${label} is longer than ${max} characters.`;
+  if (required && v.trim().length === 0) return `${label} cannot be empty.`;
+  if (CONTROL_CHARS.test(v)) return `${label} contains control characters.`;
+  return null;
+}
+
+function checkTimestamp(v: unknown, label: string): string | null {
+  if (typeof v !== 'string' || !ISO_TS_REGEX.test(v) || isNaN(Date.parse(v))) {
+    return `${label} is not a valid timestamp.`;
+  }
+  return null;
+}
+
+function checkOptionalBool(v: unknown, label: string): string | null {
+  if (v !== undefined && typeof v !== 'boolean') return `${label} must be true or false.`;
+  return null;
+}
+
+function checkDuration(v: unknown, label: string): string | null {
+  const d = typeof v === 'number' ? validateDurationMinutes(v) : { isValid: false, error: 'must be a number.' };
+  if (!d.isValid) return `${label} duration is invalid: ${d.error}`;
+  if ((v as number) > IMPORT_LIMITS.maxDurationMinutes) return `${label} duration is too large.`;
+  return null;
+}
+
+function checkList(v: unknown, label: string, max: number): v is unknown[] {
+  return Array.isArray(v) && v.length <= max;
+}
+
 /**
- * Validates complete database object before import.
- * Returns detailed error message if the file is wrong, damaged, or has unknown schemaVersion.
+ * Validates a complete database object (used for imports AND for data read back from storage).
+ * Strict: every collection, field, type, enum, date, id and reference is checked, unknown
+ * fields are rejected, and a fresh sanitized copy (only known fields) is returned.
+ * Nothing is written by this function.
  */
 export function validateImportDatabase(raw: unknown): { isValid: boolean; error?: string; data?: AppDatabase } {
-  if (!raw || typeof raw !== 'object') {
-    return { isValid: false, error: 'Import file does not contain a valid JSON object.' };
+  const fail = (error: string) => ({ isValid: false as const, error });
+
+  if (!isPlainObject(raw)) return fail('Import file does not contain a valid JSON object.');
+  const err0 = checkKeys(
+    raw,
+    ['schemaVersion', 'areas', 'scheduleEntries', 'notices', 'supplyRecords', 'reports', 'waterTestResults'],
+    'Database'
+  );
+  if (err0) return fail(err0);
+
+  if (typeof raw.schemaVersion !== 'number') return fail('Missing or invalid schemaVersion in import file.');
+  if (raw.schemaVersion !== 1) {
+    return fail(`Unsupported schemaVersion: ${String(raw.schemaVersion).slice(0, 20)}. Only version 1 is supported.`);
   }
 
-  const obj = raw as Partial<AppDatabase>;
+  const L = IMPORT_LIMITS;
+  const lists: [string, number][] = [
+    ['areas', L.maxAreas],
+    ['scheduleEntries', L.maxScheduleEntries],
+    ['notices', L.maxNotices],
+    ['supplyRecords', L.maxSupplyRecords],
+    ['reports', L.maxReports],
+    ['waterTestResults', L.maxWaterTests],
+  ];
+  for (const [name, max] of lists) {
+    const v = raw[name];
+    if (!Array.isArray(v)) return fail(`Import file missing ${name} array.`);
+    if (!checkList(v, name, max)) return fail(`${name} has too many records (limit ${max}).`);
+  }
+  if ((raw.areas as unknown[]).length === 0) return fail('Import file must include a non-empty areas list.');
 
-  if (typeof obj.schemaVersion !== 'number') {
-    return { isValid: false, error: 'Missing or invalid schemaVersion in import file.' };
-  }
+  const seen = (items: Rec[]) => new Set(items.map((i) => i.id as string)).size === items.length;
+  const first = <T,>(items: unknown[], fn: (o: Rec, i: number) => string | T): { err?: string; out: T[] } => {
+    const out: T[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (!isPlainObject(it)) return { err: 'A record is not an object.', out };
+      const r = fn(it, i);
+      if (typeof r === 'string') return { err: r, out };
+      out.push(r as T);
+    }
+    return { out };
+  };
 
-  if (obj.schemaVersion !== 1) {
-    return {
-      isValid: false,
-      error: `Unsupported schemaVersion: ${obj.schemaVersion}. Only version 1 is supported.`,
-    };
-  }
+  // Areas
+  const areasRes = first<{ id: string; name: string }>(raw.areas as unknown[], (a) => {
+    const e =
+      checkKeys(a, ['id', 'name'], 'Area') ||
+      checkId(a.id, 'Area') ||
+      checkString(a.name, 'Area name', L.maxAreaName, true);
+    return e || { id: a.id as string, name: a.name as string };
+  });
+  if (areasRes.err) return fail(areasRes.err);
+  const areaIds = new Set(areasRes.out.map((a) => a.id));
+  if (areaIds.size !== areasRes.out.length) return fail('Duplicate area ids.');
 
-  if (!Array.isArray(obj.areas) || obj.areas.length === 0) {
-    return { isValid: false, error: 'Import file must include a non-empty areas list.' };
-  }
+  const common = (o: Rec, label: string, extra: string[]) =>
+    checkKeys(o, ['id', 'areaId', 'isSample', ...extra], label) ||
+    checkId(o.id, label) ||
+    checkOptionalBool(o.isSample, `${label} isSample`);
+  const sampleOf = (o: Rec) => (o.isSample === undefined ? {} : { isSample: o.isSample as boolean });
+  const needArea = (o: Rec, label: string) =>
+    typeof o.areaId === 'string' && areaIds.has(o.areaId) ? null : `${label} refers to an unknown area.`;
 
-  for (const a of obj.areas) {
-    if (!a || typeof a.id !== 'string' || typeof a.name !== 'string') {
-      return { isValid: false, error: 'One or more areas are malformed.' };
-    }
-  }
+  // Schedule entries
+  const sched = first<ScheduleEntry>(raw.scheduleEntries as unknown[], (s) => {
+    const e =
+      common(s, 'Schedule entry', ['dayOfWeek', 'startTime', 'durationMinutes']) ||
+      needArea(s, 'Schedule entry') ||
+      (VALID_DAYS.includes(s.dayOfWeek as DayOfWeek) ? null : 'Schedule entry has an invalid day of week.') ||
+      (typeof s.startTime === 'string' && validateTime(s.startTime).isValid && s.startTime === s.startTime.trim()
+        ? null
+        : 'Schedule entry has an invalid start time.') ||
+      checkDuration(s.durationMinutes, 'Schedule entry');
+    return (
+      e || {
+        id: s.id as string,
+        areaId: s.areaId as string,
+        dayOfWeek: s.dayOfWeek as DayOfWeek,
+        startTime: s.startTime as string,
+        durationMinutes: s.durationMinutes as number,
+        ...sampleOf(s),
+      }
+    );
+  });
+  if (sched.err) return fail(sched.err);
+  if (!seen(sched.out as unknown as Rec[])) return fail('Duplicate schedule entry ids.');
 
-  const areaIdSet = new Set(obj.areas.map((a) => a.id));
+  // Notices
+  const notes = first<Notice>(raw.notices as unknown[], (n) => {
+    const e =
+      checkKeys(n, ['id', 'areaId', 'message', 'createdAt', 'isSample'], 'Notice') ||
+      checkId(n.id, 'Notice') ||
+      checkOptionalBool(n.isSample, 'Notice isSample') ||
+      (n.areaId === '' || (typeof n.areaId === 'string' && areaIds.has(n.areaId))
+        ? null
+        : 'Notice refers to an unknown area.') ||
+      checkString(n.message, 'Notice message', PLACEHOLDERS.textLimits.noticeMessage, true) ||
+      checkTimestamp(n.createdAt, 'Notice createdAt');
+    return (
+      e || {
+        id: n.id as string,
+        areaId: n.areaId as string,
+        message: n.message as string,
+        createdAt: n.createdAt as string,
+        ...sampleOf(n),
+      }
+    );
+  });
+  if (notes.err) return fail(notes.err);
+  if (!seen(notes.out as unknown as Rec[])) return fail('Duplicate notice ids.');
 
-  // Validate schedule entries
-  if (!Array.isArray(obj.scheduleEntries)) {
-    return { isValid: false, error: 'Import file missing scheduleEntries array.' };
-  }
-  for (const s of obj.scheduleEntries) {
-    if (!s || typeof s.id !== 'string' || !areaIdSet.has(s.areaId)) {
-      return { isValid: false, error: `Schedule entry refers to an invalid areaId: ${s?.areaId}.` };
-    }
-    if (!VALID_DAYS.includes(s.dayOfWeek as DayOfWeek)) {
-      return { isValid: false, error: `Invalid dayOfWeek in schedule entry: ${s.dayOfWeek}.` };
-    }
-    const durCheck = validateDurationMinutes(s.durationMinutes);
-    if (!durCheck.isValid) {
-      return { isValid: false, error: `Schedule entry has invalid duration: ${durCheck.error}` };
-    }
-    const timeCheck = validateTime(s.startTime);
-    if (!timeCheck.isValid) {
-      return { isValid: false, error: `Schedule entry has invalid startTime: ${timeCheck.error}` };
-    }
-  }
+  // Supply records
+  const sup = first<SupplyRecord>(raw.supplyRecords as unknown[], (r) => {
+    const e =
+      common(r, 'Supply record', ['date', 'startTime', 'durationMinutes', 'createdAt']) ||
+      needArea(r, 'Supply record') ||
+      (typeof r.date === 'string' && validateDate(r.date).isValid ? null : 'Supply record has an invalid date.') ||
+      (typeof r.startTime === 'string' && validateTime(r.startTime).isValid && r.startTime === r.startTime.trim()
+        ? null
+        : 'Supply record has an invalid start time.') ||
+      checkDuration(r.durationMinutes, 'Supply record') ||
+      checkTimestamp(r.createdAt, 'Supply record createdAt');
+    return (
+      e || {
+        id: r.id as string,
+        areaId: r.areaId as string,
+        date: r.date as string,
+        startTime: r.startTime as string,
+        durationMinutes: r.durationMinutes as number,
+        createdAt: r.createdAt as string,
+        ...sampleOf(r),
+      }
+    );
+  });
+  if (sup.err) return fail(sup.err);
+  if (!seen(sup.out as unknown as Rec[])) return fail('Duplicate supply record ids.');
 
-  // Validate notices
-  if (!Array.isArray(obj.notices)) {
-    return { isValid: false, error: 'Import file missing notices array.' };
-  }
-  for (const n of obj.notices) {
-    if (!n || typeof n.id !== 'string') {
-      return { isValid: false, error: 'Notice entry is malformed.' };
-    }
-    if (n.areaId !== '' && !areaIdSet.has(n.areaId)) {
-      return { isValid: false, error: `Notice refers to an unknown areaId: ${n.areaId}.` };
-    }
-    if (typeof n.message !== 'string' || !n.message.trim()) {
-      return { isValid: false, error: 'Notice message cannot be empty.' };
-    }
-  }
+  // Reports
+  const reps = first<Report>(raw.reports as unknown[], (r) => {
+    const e =
+      common(r, 'Report', ['type', 'note', 'status', 'createdAt', 'updatedAt']) ||
+      needArea(r, 'Report') ||
+      (VALID_REPORT_TYPES.includes(r.type as ReportType) ? null : 'Report has an invalid type.') ||
+      (VALID_STATUSES.includes(r.status as ComplaintStatus) ? null : 'Report has an invalid status.') ||
+      (r.note === undefined ? null : checkString(r.note, 'Report note', PLACEHOLDERS.textLimits.reportNote, false)) ||
+      checkTimestamp(r.createdAt, 'Report createdAt') ||
+      checkTimestamp(r.updatedAt, 'Report updatedAt');
+    return (
+      e || {
+        id: r.id as string,
+        areaId: r.areaId as string,
+        type: r.type as ReportType,
+        ...(r.note === undefined ? {} : { note: r.note as string }),
+        status: r.status as ComplaintStatus,
+        createdAt: r.createdAt as string,
+        updatedAt: r.updatedAt as string,
+        ...sampleOf(r),
+      }
+    );
+  });
+  if (reps.err) return fail(reps.err);
+  if (!seen(reps.out as unknown as Rec[])) return fail('Duplicate report ids.');
 
-  // Validate supply records
-  if (!Array.isArray(obj.supplyRecords)) {
-    return { isValid: false, error: 'Import file missing supplyRecords array.' };
-  }
-  for (const sup of obj.supplyRecords) {
-    if (!sup || typeof sup.id !== 'string' || !areaIdSet.has(sup.areaId)) {
-      return { isValid: false, error: `Supply record refers to unknown areaId: ${sup?.areaId}.` };
-    }
-    const durCheck = validateDurationMinutes(sup.durationMinutes);
-    if (!durCheck.isValid) {
-      return { isValid: false, error: `Supply record has invalid duration: ${durCheck.error}` };
-    }
-    const timeCheck = validateTime(sup.startTime);
-    if (!timeCheck.isValid) {
-      return { isValid: false, error: `Supply record has invalid startTime: ${timeCheck.error}` };
-    }
-    const dateCheck = validateDate(sup.date);
-    if (!dateCheck.isValid) {
-      return { isValid: false, error: `Supply record has invalid date: ${dateCheck.error}` };
-    }
-  }
+  // Water tests
+  const tests = first<WaterTestResult>(raw.waterTestResults as unknown[], (w) => {
+    const e =
+      checkKeys(w, ['id', 'areaId', 'testedOn', 'result', 'source', 'enteredAt', 'isSample'], 'Water test') ||
+      checkId(w.id, 'Water test') ||
+      checkOptionalBool(w.isSample, 'Water test isSample') ||
+      (w.areaId === undefined || w.areaId === '' || (typeof w.areaId === 'string' && areaIds.has(w.areaId))
+        ? null
+        : 'Water test refers to an unknown area.') ||
+      (typeof w.testedOn === 'string' && validateDate(w.testedOn).isValid ? null : 'Water test has an invalid date.') ||
+      checkString(w.result, 'Water test result', PLACEHOLDERS.textLimits.waterTestResult, true) ||
+      checkString(w.source, 'Water test source', PLACEHOLDERS.textLimits.waterTestSource, true) ||
+      checkTimestamp(w.enteredAt, 'Water test enteredAt');
+    return (
+      e || {
+        id: w.id as string,
+        ...(w.areaId === undefined ? {} : { areaId: w.areaId as string }),
+        testedOn: w.testedOn as string,
+        result: w.result as string,
+        source: w.source as string,
+        enteredAt: w.enteredAt as string,
+        ...sampleOf(w),
+      }
+    );
+  });
+  if (tests.err) return fail(tests.err);
+  if (!seen(tests.out as unknown as Rec[])) return fail('Duplicate water test ids.');
 
-  // Validate reports
-  if (!Array.isArray(obj.reports)) {
-    return { isValid: false, error: 'Import file missing reports array.' };
-  }
-  for (const r of obj.reports) {
-    if (!r || typeof r.id !== 'string' || !areaIdSet.has(r.areaId)) {
-      return { isValid: false, error: `Report refers to unknown areaId: ${r?.areaId}.` };
-    }
-    if (!VALID_REPORT_TYPES.includes(r.type as ReportType)) {
-      return { isValid: false, error: `Invalid report type: ${r.type}.` };
-    }
-    if (!VALID_STATUSES.includes(r.status as ComplaintStatus)) {
-      return { isValid: false, error: `Invalid report status: ${r.status}.` };
-    }
-  }
-
-  // Validate water tests
-  if (!Array.isArray(obj.waterTestResults)) {
-    return { isValid: false, error: 'Import file missing waterTestResults array.' };
-  }
-  for (const w of obj.waterTestResults) {
-    if (!w || typeof w.id !== 'string') {
-      return { isValid: false, error: 'Water test entry is malformed.' };
-    }
-    if (w.areaId && !areaIdSet.has(w.areaId)) {
-      return { isValid: false, error: `Water test refers to unknown areaId: ${w.areaId}.` };
-    }
-    if (typeof w.result !== 'string' || !w.result.trim()) {
-      return { isValid: false, error: 'Water test result cannot be empty.' };
-    }
-    if (typeof w.source !== 'string' || !w.source.trim()) {
-      return { isValid: false, error: 'Water test source cannot be empty.' };
-    }
-  }
-
-  return { isValid: true, data: obj as AppDatabase };
+  const data: AppDatabase = {
+    schemaVersion: 1,
+    areas: areasRes.out,
+    scheduleEntries: sched.out,
+    notices: notes.out,
+    supplyRecords: sup.out,
+    reports: reps.out,
+    waterTestResults: tests.out,
+  };
+  return { isValid: true, data };
 }
