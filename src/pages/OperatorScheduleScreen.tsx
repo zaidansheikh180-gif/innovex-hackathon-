@@ -239,7 +239,7 @@ export const OperatorScheduleScreen: React.FC<OperatorScheduleScreenProps> = ({ 
         <div className="flex items-center justify-between">
           <h2 id="post-notice-heading" className="text-base font-bold text-slate-900 flex items-center gap-2">
             <Bell className="w-4 h-4 text-amber-600" />
-            <span>Post a Delay or Service Notice (FR-002)</span>
+            <span>Post a Delay or Service Notice</span>
           </h2>
         </div>
 
@@ -352,7 +352,7 @@ export const OperatorScheduleScreen: React.FC<OperatorScheduleScreenProps> = ({ 
             <h2 id="schedule-heading" className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Clock className="w-4 h-4 text-teal-700" />
               <span>
-                {editingScheduleId ? 'Edit Schedule Entry' : 'Add New Schedule Entry'} (FR-001)
+                {editingScheduleId ? 'Edit Schedule Entry' : 'Add New Schedule Entry'}
               </span>
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
