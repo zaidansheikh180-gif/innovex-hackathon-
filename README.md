@@ -1,8 +1,75 @@
 # JalSetu (hackathon demo)
 
+*Know Your Supply. Report the Problem. Improve Your Village.*
+
+## Project Overview
+
 A browser-only web app for a village that shares one water supply. Residents see when water is planned and report problems. The water operator / panchayat records what was actually supplied, tracks complaints, and compares areas.
 
+## Problem Statement
+
 **Problem addressed:** supply arrives briefly and unevenly, and nobody keeps records of supply, interruptions or complaints, so people wait without knowing when water will come.
+
+**How JalSetu solves it:** the water operator / panchayat records each planned slot and each actual supply (area, date, start time, duration) and posts delay notices. Residents see the schedule and notices for their area and report leaks, no water or low supply. The operator tracks each report through New, In progress and Resolved and compares areas using the recorded totals. The app only records and shows information; it does not repair pipes, detect leaks or decide water safety.
+
+The wording above is the team's own summary of the problem. Full prototype limits are listed in "Read this first" and "Known limitations" below.
+
+## Technologies Used
+
+| Part | Technology |
+| --- | --- |
+| Interface | React 19 with TypeScript |
+| Build tool and dev server | Vite 8 (runs on localhost) |
+| Styling | Tailwind CSS, Plus Jakarta Sans font (bundled, works offline) |
+| Icons | lucide-react |
+| Storage | Browser `localStorage` (no server, no database, no login) |
+| Tests | `npm test` (82 automated checks) and `npm run lint` (TypeScript check) |
+| Tools | Node.js, npm, Visual Studio Code, Git |
+
+## System Architecture
+
+JalSetu is a single-page web app that runs entirely in the browser. There is no backend.
+
+```
+ Browser (localhost:3000)
+ +-----------------------------------------------------------+
+ |  Screens (src/pages)                                      |
+ |   Resident: Schedule | Report | My Reports | Water Tests   |
+ |   Operator: Supply Log | Complaints | Timings | Compare   |
+ |   Both: Home (role choice) | Data (backup / import / reset)|
+ |        |                                                  |
+ |  App shell (src/App.tsx): hash routing + demo role switch |
+ |        |                                                  |
+ |  Validation (src/lib/validation.ts): forms + strict import|
+ |        |                                                  |
+ |  Storage layer (src/data/storage.ts)                      |
+ |        |                                                  |
+ |  localStorage: database, role, my-reports list, one       |
+ |  recovery backup                                          |
+ +-----------------------------------------------------------+
+        JSON file <-> export / import (user's own computer)
+```
+
+- **Data flow:** a screen validates the form, the storage layer saves one record list in `localStorage`, and the screens re-read it. Nothing is sent over the network.
+- **Roles:** Resident and Operator are a demo switch, not security. In the Resident view an Operator screen shows a "role required" page instead.
+- **Data model** (`src/data/types.ts`): areas, schedule entries, notices, supply records, reports (complaints) and water-test records.
+- **Safety:** imports are strictly validated and need confirmation, reset needs confirmation and keeps one recovery copy, and a bad file changes nothing.
+
+## Key Features
+
+- **Resident:** view planned supply times and delay notices by area; report a leak, no water or low supply with an optional note; track own reports and their status; read water-test records.
+- **Operator / Panchayat:** record actual supply (area, date, start time, minutes); add and edit planned timings; post delay notices; move complaints between New, In progress and Resolved; compare areas (supply logs, total minutes, complaints by status and type); enter water-test records from an external testing authority.
+- **Data:** JSON backup export, strict JSON import with confirmation, reset to empty with confirmation, restore of the previous copy.
+- **Honest by design:** starts empty, no sample data, no real notifications, and clear on-screen notes about what is not built.
+
+## Working Process
+
+1. The operator sets the planned schedule (Timings) and records each actual supply (Supply Log).
+2. The operator posts a delay or service notice when needed.
+3. Residents open Schedule to see timings and notices, and use Report when there is a problem.
+4. The operator opens Complaints and updates each report's status; residents see the new status in My Reports.
+5. The operator uses Compare to see which areas have fewer supplies or more complaints, and enters water-test records received from the responsible authority.
+6. Data can be exported as a JSON backup at any time.
 
 ## Read this first: what is real and what is simulated
 
@@ -20,7 +87,7 @@ The app uses the Plus Jakarta Sans font (SIL Open Font License), bundled in the 
 - npm (comes with Node.js). No API keys, accounts or environment variables are needed.
 - A modern browser (Chrome, Edge, Firefox, Safari).
 
-## Install and run (Windows, macOS, Linux)
+## Installation and Execution (Windows, macOS, Linux)
 
 Open a terminal (PowerShell or Command Prompt on Windows) in the folder where you want the project:
 
@@ -51,9 +118,9 @@ npm test
 npm run lint
 ```
 
-`npm test` runs 76 automated checks (rules for supply/duration/date validation, saving, import/export/reset, strict import validation, size limits, tampered-storage handling, recovery backup). `npm run lint` runs the TypeScript type check.
+`npm test` runs 82 automated checks (rules for supply/duration/date validation, saving, import/export/reset, strict import validation, size limits, tampered-storage handling, recovery backup). `npm run lint` runs the TypeScript type check.
 
-## 60-second live demo
+## 60-second live demo (working feature walkthrough)
 
 The app starts empty, so enter a few records live (this also shows nothing is faked):
 
