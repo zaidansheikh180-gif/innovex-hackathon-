@@ -57,7 +57,7 @@ export const OperatorCompareScreen: React.FC<OperatorCompareScreenProps> = ({ db
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
             <BarChart2 className="w-5 h-5 text-teal-700" />
-            <span>Panchayat Area Comparison (FR-006)</span>
+            <span>Panchayat Area Comparison</span>
           </h1>
           <span className="text-xs px-2.5 py-1 bg-slate-100 text-slate-700 rounded border border-slate-200">
             Operator View
@@ -73,7 +73,7 @@ export const OperatorCompareScreen: React.FC<OperatorCompareScreenProps> = ({ db
         <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
         <p>
           <strong>Record-Based Count:</strong> Metrics represent exclusively the records entered into this
-          device&apos;s browser database (including sample records). The app does not invent volumetric liters,
+          device&apos;s browser database. The app does not invent volumetric liters,
           percentages, or household metrics.
         </p>
       </div>
