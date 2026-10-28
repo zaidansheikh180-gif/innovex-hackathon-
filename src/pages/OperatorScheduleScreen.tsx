@@ -29,6 +29,7 @@ import {
   XCircle,
   Clock,
 } from 'lucide-react';
+import { GlassButton } from '../components/GlassButton.tsx';
 
 interface OperatorScheduleScreenProps {
   db: AppDatabase;
@@ -303,13 +304,13 @@ export const OperatorScheduleScreen: React.FC<OperatorScheduleScreenProps> = ({ 
             )}
           </div>
 
-          <button
+          <GlassButton
             type="submit"
             disabled={isNoticeSubmitting}
-            className="px-5 py-2 rounded-md font-semibold text-xs sm:text-sm text-white bg-amber-800 hover:bg-amber-900 disabled:opacity-50 transition focus:outline-hidden focus:ring-2 focus:ring-amber-600"
+            tone="amber" className="px-5 py-2 font-semibold text-xs sm:text-sm"
           >
             {isNoticeSubmitting ? 'Posting Notice...' : 'Publish Notice'}
-          </button>
+          </GlassButton>
         </form>
 
         {/* List of active notices */}
@@ -362,14 +363,14 @@ export const OperatorScheduleScreen: React.FC<OperatorScheduleScreenProps> = ({ 
           </div>
 
           {editingScheduleId && (
-            <button
+            <GlassButton
               type="button"
               onClick={cancelEditing}
-              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded border border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+              tone="neutral" className="inline-flex items-center gap-1 px-2.5 py-1 text-xs"
             >
               <XCircle className="w-3.5 h-3.5" />
               <span>Cancel Editing</span>
-            </button>
+            </GlassButton>
           )}
         </div>
 
@@ -464,25 +465,25 @@ export const OperatorScheduleScreen: React.FC<OperatorScheduleScreenProps> = ({ 
           </div>
 
           <div className="flex items-center gap-3">
-            <button
+            <GlassButton
               type="submit"
               disabled={isSchedSubmitting}
-              className="px-5 py-2.5 rounded-md font-semibold text-xs sm:text-sm text-white bg-teal-800 hover:bg-teal-900 disabled:opacity-50 transition focus:outline-hidden focus:ring-2 focus:ring-teal-600"
+              tone="teal" className="px-5 py-2.5 font-semibold text-xs sm:text-sm"
             >
               {isSchedSubmitting
                 ? 'Saving...'
                 : editingScheduleId
                 ? 'Save Schedule Updates'
                 : 'Add Schedule Slot'}
-            </button>
+            </GlassButton>
             {editingScheduleId && (
-              <button
+              <GlassButton
                 type="button"
                 onClick={cancelEditing}
-                className="px-4 py-2.5 rounded-md text-xs sm:text-sm font-medium border border-slate-300 text-slate-700 hover:bg-slate-100"
+                tone="neutral" className="px-4 py-2.5 text-xs sm:text-sm font-medium"
               >
                 Cancel
-              </button>
+              </GlassButton>
             )}
           </div>
         </form>
@@ -532,15 +533,15 @@ export const OperatorScheduleScreen: React.FC<OperatorScheduleScreenProps> = ({ 
                         {item.isSample ? <SampleBadge /> : <span className="text-slate-500 text-[11px]">User Record</span>}
                       </td>
                       <td className="p-2.5 text-right">
-                        <button
+                        <GlassButton
                           type="button"
                           onClick={() => startEditing(item)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-slate-300 bg-white hover:bg-slate-100 text-slate-800 font-semibold transition"
+                          tone="neutral" className="inline-flex items-center gap-1 px-2.5 py-1 font-semibold"
                           aria-label={`Edit schedule for ${getAreaName(item.areaId)} on ${item.dayOfWeek}`}
                         >
                           <Edit2 className="w-3 h-3 text-teal-700" />
                           <span>Edit</span>
-                        </button>
+                        </GlassButton>
                       </td>
                     </tr>
                   ))}
