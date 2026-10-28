@@ -70,9 +70,6 @@ export const HeaderAndNav: React.FC<HeaderAndNavProps> = ({
             <strong>Local Storage Only:</strong> Data stays exclusively on this browser/device.
           </span>
         </div>
-        <div className="text-slate-400 text-[11px]">
-          Demo role switch is for preview only (not login or security).
-        </div>
       </div>
 
       {/* Main Top Header */}
@@ -91,9 +88,6 @@ export const HeaderAndNav: React.FC<HeaderAndNavProps> = ({
               <h1 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
                 {PLACEHOLDERS.appName}
               </h1>
-              <p className="text-xs text-slate-500 hidden sm:block">
-                {PLACEHOLDERS.appTagline}
-              </p>
             </div>
           </button>
 
