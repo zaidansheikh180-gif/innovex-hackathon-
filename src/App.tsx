@@ -11,7 +11,7 @@ import {
   getStoredRole,
   setStoredRole,
   subscribeToStorage,
-  resetToSampleData,
+  resetAllData,
   StorageError,
 } from './data/storage.ts';
 import { HeaderAndNav } from './components/HeaderAndNav.tsx';
@@ -90,7 +90,7 @@ export default function App() {
   };
 
   const handleRecoveryReset = () => {
-    resetToSampleData();
+    resetAllData();
     setIsResetRecoveryModalOpen(false);
     reloadFromStorage();
   };
@@ -132,7 +132,7 @@ export default function App() {
               onClick={() => setIsResetRecoveryModalOpen(true)}
               tone="roseSoft" className="px-4 py-2 font-medium text-xs"
             >
-              Reset to Clean Sample Data
+              Reset to Empty Data
             </GlassButton>
           </div>
         </div>
@@ -233,7 +233,7 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t border-slate-200/80 bg-white text-slate-600 text-xs py-4 px-4 text-center hidden md:block">
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>Village Water Supply Tracker (Browser-Only Demo)</span>
+          <span>JalSetu (Browser-Only Demo)</span>
           <span className="text-[11px]">
             Data stored locally on this device • Zero backend dependencies
           </span>
@@ -243,8 +243,8 @@ export default function App() {
       {/* Recovery Modal */}
       <ConfirmModal
         isOpen={isResetRecoveryModalOpen}
-        title="Reset Storage to Clean Sample Data?"
-        message="This will overwrite corrupted local storage data and restore default sample schedules and complaints."
+        title="Reset Storage to Empty Data?"
+        message="This will overwrite corrupted local storage data and start again with no schedules, notices, reports, supply or water-test records."
         confirmLabel="Reset Storage Now"
         cancelLabel="Cancel"
         isDestructive={true}
