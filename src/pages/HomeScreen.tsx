@@ -61,7 +61,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Resident Card */}
           <div
-            className={`p-5 rounded-lg border transition-all ${
+            className={`p-4 md:p-5 rounded-lg border transition-all ${
               currentRole === 'resident'
                 ? 'border-teal-700 bg-teal-50/50 shadow-xs ring-1 ring-teal-700'
                 : 'border-slate-200 bg-white hover:border-slate-300'
@@ -77,12 +77,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </div>
             </div>
 
-            <p className="text-xs text-slate-600 mt-3 leading-relaxed">
+            <p className="hidden sm:block text-xs text-slate-600 mt-3 leading-relaxed">
               Check scheduled water supply hours for your area, read delay notices, and submit reports for
               leaks or service interruptions.
             </p>
 
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-3 sm:mt-4 flex items-center gap-2">
               <GlassButton
                 type="button"
                 onClick={() => {
@@ -99,7 +99,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
           {/* Operator / Panchayat Card */}
           <div
-            className={`p-5 rounded-lg border transition-all ${
+            className={`p-4 md:p-5 rounded-lg border transition-all ${
               currentRole === 'operator'
                 ? 'border-teal-700 bg-teal-50/50 shadow-xs ring-1 ring-teal-700'
                 : 'border-slate-200 bg-white hover:border-slate-300'
@@ -115,12 +115,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </div>
             </div>
 
-            <p className="text-xs text-slate-600 mt-3 leading-relaxed">
+            <p className="hidden sm:block text-xs text-slate-600 mt-3 leading-relaxed">
               Log actual distribution timings, track and resolve resident complaints, manage area schedules,
               and post delay notices.
             </p>
 
-            <div className="mt-4 flex items-center gap-2">
+            <div className="mt-3 sm:mt-4 flex items-center gap-2">
               <GlassButton
                 type="button"
                 onClick={() => {
