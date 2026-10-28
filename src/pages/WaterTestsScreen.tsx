@@ -14,6 +14,7 @@ import { formatISODateOnly, formatISODateTime, getTodayDateString } from '../lib
 import { PLACEHOLDERS } from '../config/placeholders.ts';
 import { SampleBadge } from '../components/SampleBadge.tsx';
 import { FlaskConical, ShieldAlert, PlusCircle, CheckCircle } from 'lucide-react';
+import { GlassButton } from '../components/GlassButton.tsx';
 
 interface WaterTestsScreenProps {
   db: AppDatabase;
@@ -231,13 +232,13 @@ export const WaterTestsScreen: React.FC<WaterTestsScreenProps> = ({ db, currentR
               {errors.result && <p className="mt-1 text-xs text-rose-600">{errors.result}</p>}
             </div>
 
-            <button
+            <GlassButton
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-md font-semibold text-xs sm:text-sm text-white bg-teal-800 hover:bg-teal-900 disabled:opacity-50 transition focus:outline-hidden focus:ring-2 focus:ring-teal-600"
+              tone="teal" className="px-5 py-2.5 font-semibold text-xs sm:text-sm"
             >
               {isSubmitting ? 'Saving Test Record...' : 'Log Test Record'}
-            </button>
+            </GlassButton>
           </form>
         </section>
       )}
