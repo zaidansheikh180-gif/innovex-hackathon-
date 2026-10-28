@@ -37,12 +37,21 @@ import {
   addNotice,
   exportDatabaseAsJSON,
   importDatabaseFromJSON,
-  resetToSampleData,
+  resetAllData,
   getMyReportIds,
   getBackupInfo,
   restorePreviousData,
 } from '../data/storage.ts';
-import { INITIAL_SAMPLE_DATABASE } from '../data/sampleData.ts';
+import { TEST_FIXTURE_DATABASE as INITIAL_SAMPLE_DATABASE } from './fixtureData.ts';
+import { EMPTY_DATABASE } from '../data/sampleData.ts';
+
+// Seed the temporary test fixture (test-only data) into storage.
+function resetToSampleData() {
+  resetAllData();
+  const r = saveDatabase(JSON.parse(JSON.stringify(INITIAL_SAMPLE_DATABASE)));
+  localStorage.removeItem('village_water_app_my_reports_v1');
+  return r;
+}
 
 import {
   validateDurationMinutes,
@@ -369,6 +378,23 @@ resetToSampleData();
 addReport({ areaId: A, type: 'leak', note: 'keep me' });
 const keepRaw = localStorage.getItem('village_water_app_db_v1');
 assert(!importDatabaseFromJSON('{nope').success && localStorage.getItem('village_water_app_db_v1') === keepRaw, 'Test 16i: failed import leaves data untouched');
+
+// -------------------------------------------------------------------------
+// TEST 20: Clean first run (no fabricated records) and empty reset
+// -------------------------------------------------------------------------
+(globalThis as any).localStorage.clear();
+const fresh = loadDatabase().db!;
+assert(
+  fresh.areas.length > 0 && fresh.scheduleEntries.length === 0 && fresh.notices.length === 0 &&
+    fresh.supplyRecords.length === 0 && fresh.reports.length === 0 && fresh.waterTestResults.length === 0,
+  'Test 20a: first run starts with areas only and no records'
+);
+assert(validateImportDatabase(fresh).isValid, 'Test 20b: empty database passes import validation');
+assert(importDatabaseFromJSON(exportDatabaseAsJSON()).success === true, 'Test 20c: empty database exports and re-imports');
+resetToSampleData();
+assert(loadDatabase().db!.reports.length > 0, 'Test 20d: fixture seeds test records');
+assert(resetAllData().success && loadDatabase().db!.reports.length === 0 && getBackupInfo() !== null, 'Test 20e: reset clears records and keeps a backup');
+assert(JSON.stringify(EMPTY_DATABASE).includes('sample') === false, 'Test 20f: shipped default has no sample records');
 
 console.log('\n--- VERIFICATION TEST SUMMARY ---');
 const total = results.length;
