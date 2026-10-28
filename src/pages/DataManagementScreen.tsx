@@ -26,6 +26,7 @@ import {
   FileCode,
   ShieldAlert,
 } from 'lucide-react';
+import { GlassButton } from '../components/GlassButton.tsx';
 
 interface DataManagementScreenProps {
   db: AppDatabase;
@@ -256,14 +257,14 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
             </p>
           </div>
 
-          <button
+          <GlassButton
             type="button"
             onClick={handleExport}
-            className="w-full py-2.5 px-3 rounded-md bg-teal-800 hover:bg-teal-900 text-white font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 focus:outline-hidden focus:ring-2 focus:ring-teal-700"
+            tone="teal" className="py-2.5 px-3 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5" wrapperClassName="flex w-full"
           >
             <Download className="w-4 h-4" />
             <span>Download JSON Backup</span>
-          </button>
+          </GlassButton>
         </div>
 
         {/* 2. Import JSON */}
@@ -287,14 +288,14 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
               className="sr-only"
               id="json-file-input"
             />
-            <button
+            <GlassButton
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="w-full py-2.5 px-3 rounded-md bg-blue-800 hover:bg-blue-900 text-white font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 focus:outline-hidden focus:ring-2 focus:ring-blue-700"
+              tone="blue" className="py-2.5 px-3 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5" wrapperClassName="flex w-full"
             >
               <Upload className="w-4 h-4" />
               <span>Select File to Import...</span>
-            </button>
+            </GlassButton>
           </div>
         </div>
 
@@ -310,15 +311,15 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
             </p>
           </div>
 
-          <button
+          <GlassButton
             ref={resetTriggerRef}
             type="button"
             onClick={() => setIsResetModalOpen(true)}
-            className="w-full py-2.5 px-3 rounded-md border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-900 font-semibold text-xs sm:text-sm transition flex items-center justify-center gap-1.5 focus:outline-hidden focus:ring-2 focus:ring-rose-600"
+            tone="roseSoft" className="py-2.5 px-3 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5" wrapperClassName="flex w-full"
           >
             <RefreshCw className="w-4 h-4" />
             <span>Reset to Sample Data</span>
-          </button>
+          </GlassButton>
         </div>
       </div>
 
