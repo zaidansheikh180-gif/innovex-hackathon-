@@ -22,6 +22,7 @@ import {
   ArrowLeftRight,
   Home,
 } from 'lucide-react';
+import { GlassButton } from './GlassButton.tsx';
 
 interface HeaderAndNavProps {
   currentPath: string;
@@ -107,10 +108,10 @@ export const HeaderAndNav: React.FC<HeaderAndNavProps> = ({
               </span>
             </div>
 
-            <button
+            <GlassButton
               type="button"
               onClick={toggleRole}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-800 transition focus:outline-hidden focus:ring-2 focus:ring-teal-700"
+              tone="neutral" className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold"
               aria-label={`Switch demo role from ${currentRole} to ${
                 currentRole === 'resident' ? 'operator' : 'resident'
               }`}
@@ -119,7 +120,7 @@ export const HeaderAndNav: React.FC<HeaderAndNavProps> = ({
               <span>
                 Switch to {currentRole === 'resident' ? 'Operator' : 'Resident'}
               </span>
-            </button>
+            </GlassButton>
           </div>
         </div>
 
@@ -129,35 +130,27 @@ export const HeaderAndNav: React.FC<HeaderAndNavProps> = ({
           className="hidden md:block bg-slate-50 border-t border-slate-200"
         >
           <div className="max-w-6xl mx-auto px-4 flex items-center space-x-1">
-            <button
+            <GlassButton
               type="button"
               onClick={() => onNavigate('/')}
-              className={`px-3 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
-                currentPath === '/'
-                  ? 'border-teal-700 text-teal-800 font-bold bg-white'
-                  : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-              }`}
+              tone={currentPath === '/' ? 'tealSoft' : 'neutral'} className={`px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5 ${currentPath === '/' ? 'font-bold' : 'font-medium'}`} aria-current={currentPath === '/' ? 'page' : undefined}
             >
               <Home className="w-4 h-4" />
               <span>Home</span>
-            </button>
+            </GlassButton>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPath === item.path;
               return (
-                <button
+                <GlassButton
                   key={item.path}
                   type="button"
                   onClick={() => onNavigate(item.path)}
-                  className={`px-3.5 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
-                    isActive
-                      ? 'border-teal-700 text-teal-800 font-bold bg-white'
-                      : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
+                  tone={isActive ? 'tealSoft' : 'neutral'} className={`px-3 py-2 text-xs sm:text-sm flex items-center gap-1.5 ${isActive ? 'font-bold' : 'font-medium'}`} aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon className="w-4 h-4" aria-hidden="true" />
                   <span>{item.label}</span>
-                </button>
+                </GlassButton>
               );
             })}
           </div>
@@ -174,20 +167,16 @@ export const HeaderAndNav: React.FC<HeaderAndNavProps> = ({
             const Icon = item.icon;
             const isActive = currentPath === item.path;
             return (
-              <button
+              <GlassButton
                 key={item.path}
                 type="button"
                 onClick={() => onNavigate(item.path)}
-                className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-md min-h-[48px] text-[11px] transition-colors focus:outline-hidden focus:ring-2 focus:ring-teal-700 ${
-                  isActive
-                    ? 'text-teal-800 font-bold bg-teal-50/80'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                tone={isActive ? 'tealSoft' : 'neutral'} className={`flex-col py-1.5 px-1 min-h-[48px] text-[11px] ${isActive ? 'font-bold' : ''}`} wrapperClassName="flex w-full" strokeWidth={1}
                 aria-current={isActive ? 'page' : undefined}
               >
                 <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'text-teal-800' : 'text-slate-500'}`} />
                 <span className="truncate max-w-[64px]">{item.label}</span>
-              </button>
+              </GlassButton>
             );
           })}
         </div>
