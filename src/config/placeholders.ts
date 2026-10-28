@@ -6,10 +6,10 @@
  */
 
 export const PLACEHOLDERS = {
-  // App Branding (Status: TBD - Placeholder)
-  appName: '[Placeholder] Village Water Supply',
-  appTagline: '[Placeholder] Community water distribution schedule & status tracker',
-  villageName: '[Placeholder] Sample Village Panchayat',
+  // App Branding (Status: Chosen)
+  appName: 'JalSetu',
+  appTagline: 'Know Your Supply. Report the Problem. Improve Your Village.',
+  villageName: 'Malligehalli',
 
   // Areas List (Status: TBD - Mandated Sample Areas)
   areas: [
