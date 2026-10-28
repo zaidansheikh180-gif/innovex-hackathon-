@@ -28,6 +28,7 @@ import { OperatorCompareScreen } from './pages/OperatorCompareScreen.tsx';
 import { WaterTestsScreen } from './pages/WaterTestsScreen.tsx';
 import { DataManagementScreen } from './pages/DataManagementScreen.tsx';
 import { AlertOctagon, RefreshCw } from 'lucide-react';
+import { GlassButton } from './components/GlassButton.tsx';
 
 function normalizePath(hashOrPath: string): string {
   // If hash routing is used (e.g., #/schedule), extract after #
@@ -118,21 +119,21 @@ export default function App() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <button
+            <GlassButton
               type="button"
               onClick={reloadFromStorage}
-              className="px-4 py-2 bg-rose-800 text-white rounded font-medium text-xs hover:bg-rose-900 transition flex items-center justify-center gap-1.5"
+              tone="rose" className="px-4 py-2 font-medium text-xs flex items-center justify-center gap-1.5"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Retry Reading Storage</span>
-            </button>
-            <button
+            </GlassButton>
+            <GlassButton
               type="button"
               onClick={() => setIsResetRecoveryModalOpen(true)}
-              className="px-4 py-2 bg-white border border-rose-300 text-rose-900 rounded font-medium text-xs hover:bg-rose-100 transition"
+              tone="roseSoft" className="px-4 py-2 font-medium text-xs"
             >
               Reset to Clean Sample Data
-            </button>
+            </GlassButton>
           </div>
         </div>
       );
