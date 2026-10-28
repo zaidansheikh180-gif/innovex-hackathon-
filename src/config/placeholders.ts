@@ -11,11 +11,11 @@ export const PLACEHOLDERS = {
   appTagline: 'Know Your Supply. Report the Problem. Improve Your Village.',
   villageName: 'Malligehalli',
 
-  // Areas List (Status: TBD - Mandated Sample Areas)
+  // Areas List (Status: TBD - Generic area labels; no area-management screen yet)
   areas: [
-    { id: 'area-1', name: 'Sample area 1' },
-    { id: 'area-2', name: 'Sample area 2' },
-    { id: 'area-3', name: 'Sample area 3' },
+    { id: 'area-1', name: 'Area 1' },
+    { id: 'area-2', name: 'Area 2' },
+    { id: 'area-3', name: 'Area 3' },
   ],
 
   // Text Length Limits (Status: Proposed Default)
@@ -46,7 +46,7 @@ export const PLACEHOLDERS = {
   // Disclaimer Statements (Status: Chosen Rules)
   disclaimers: {
     deviceOnly: 'This application stores records solely in this web browser on this device. Data does not automatically sync across phones or computers.',
-    sampleDataNotice: 'Initial entries are labelled as Sample Data. You may replace or reset data anytime in Data Settings.',
+    sampleDataNotice: 'A new install starts with no records. Reset or replace data anytime in Data Settings.',
     demoRoleNotice: 'Role switching is a demonstration convenience, not secure authentication or login.',
     safetyNotice: 'This app records schedules and reported issues. It does not certify drinking water safety, detect underground leaks, or automatically dispatch repairs.',
   },
