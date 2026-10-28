@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Info,
 } from 'lucide-react';
+import { GlassButton } from '../components/GlassButton.tsx';
 
 interface HomeScreenProps {
   currentRole: UserRole;
@@ -87,21 +88,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </p>
 
             <div className="mt-4 flex items-center gap-2">
-              <button
+              <GlassButton
                 type="button"
                 onClick={() => {
                   onSelectRole('resident');
                   onNavigate('/schedule');
                 }}
-                className={`w-full py-2.5 px-4 rounded text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 ${
-                  currentRole === 'resident'
-                    ? 'bg-teal-800 text-white hover:bg-teal-900'
-                    : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-300'
-                }`}
+                tone={currentRole === 'resident' ? 'teal' : 'neutral'} className="py-2.5 px-4 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5" wrapperClassName="flex w-full"
               >
                 <span>Enter as Resident</span>
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </GlassButton>
             </div>
           </div>
 
@@ -129,21 +126,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </p>
 
             <div className="mt-4 flex items-center gap-2">
-              <button
+              <GlassButton
                 type="button"
                 onClick={() => {
                   onSelectRole('operator');
                   onNavigate('/operator/supply');
                 }}
-                className={`w-full py-2.5 px-4 rounded text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-1.5 ${
-                  currentRole === 'operator'
-                    ? 'bg-teal-800 text-white hover:bg-teal-900'
-                    : 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-300'
-                }`}
+                tone={currentRole === 'operator' ? 'teal' : 'neutral'} className="py-2.5 px-4 text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5" wrapperClassName="flex w-full"
               >
                 <span>Enter as Operator</span>
                 <ArrowRight className="w-4 h-4" />
-              </button>
+              </GlassButton>
             </div>
           </div>
         </div>
@@ -157,79 +150,79 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {currentRole === 'resident' ? (
             <>
-              <button
+              <GlassButton
                 type="button"
                 onClick={() => onNavigate('/schedule')}
-                className="p-3 text-left rounded border border-slate-200 hover:border-teal-600 hover:bg-slate-50 transition flex items-start gap-3"
+                tone="neutral" className="p-3 text-left flex items-start gap-3"
               >
                 <Calendar className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-sm font-semibold text-slate-900">Check Schedule</div>
                   <div className="text-xs text-slate-500">Timings & delay notices</div>
                 </div>
-              </button>
+              </GlassButton>
 
-              <button
+              <GlassButton
                 type="button"
                 onClick={() => onNavigate('/report')}
-                className="p-3 text-left rounded border border-slate-200 hover:border-teal-600 hover:bg-slate-50 transition flex items-start gap-3"
+                tone="neutral" className="p-3 text-left flex items-start gap-3"
               >
                 <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-sm font-semibold text-slate-900">Report an Issue</div>
                   <div className="text-xs text-slate-500">Leak, low supply, or no water</div>
                 </div>
-              </button>
+              </GlassButton>
 
-              <button
+              <GlassButton
                 type="button"
                 onClick={() => onNavigate('/my-reports')}
-                className="p-3 text-left rounded border border-slate-200 hover:border-teal-600 hover:bg-slate-50 transition flex items-start gap-3"
+                tone="neutral" className="p-3 text-left flex items-start gap-3"
               >
                 <Info className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-sm font-semibold text-slate-900">My Reports</div>
                   <div className="text-xs text-slate-500">Track issues logged on this device</div>
                 </div>
-              </button>
+              </GlassButton>
             </>
           ) : (
             <>
-              <button
+              <GlassButton
                 type="button"
                 onClick={() => onNavigate('/operator/supply')}
-                className="p-3 text-left rounded border border-slate-200 hover:border-teal-600 hover:bg-slate-50 transition flex items-start gap-3"
+                tone="neutral" className="p-3 text-left flex items-start gap-3"
               >
                 <Calendar className="w-5 h-5 text-teal-700 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-sm font-semibold text-slate-900">Log Supply</div>
                   <div className="text-xs text-slate-500">Record area supply duration</div>
                 </div>
-              </button>
+              </GlassButton>
 
-              <button
+              <GlassButton
                 type="button"
                 onClick={() => onNavigate('/operator/complaints')}
-                className="p-3 text-left rounded border border-slate-200 hover:border-teal-600 hover:bg-slate-50 transition flex items-start gap-3"
+                tone="neutral" className="p-3 text-left flex items-start gap-3"
               >
                 <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-sm font-semibold text-slate-900">Manage Complaints</div>
                   <div className="text-xs text-slate-500">Update resolution status</div>
                 </div>
-              </button>
+              </GlassButton>
 
-              <button
+              <GlassButton
                 type="button"
                 onClick={() => onNavigate('/operator/schedule')}
-                className="p-3 text-left rounded border border-slate-200 hover:border-teal-600 hover:bg-slate-50 transition flex items-start gap-3"
+                tone="neutral" className="p-3 text-left flex items-start gap-3"
               >
                 <Info className="w-5 h-5 text-slate-600 shrink-0 mt-0.5" />
                 <div>
                   <div className="text-sm font-semibold text-slate-900">Schedule & Notices</div>
                   <div className="text-xs text-slate-500">Edit timings & post notices</div>
                 </div>
-              </button>
+              </GlassButton>
             </>
           )}
         </div>
