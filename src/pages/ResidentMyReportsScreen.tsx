@@ -12,6 +12,7 @@ import { StatusBadge } from '../components/StatusBadge.tsx';
 import { SampleBadge } from '../components/SampleBadge.tsx';
 import { formatISODateTime } from '../lib/dateUtils.ts';
 import { ClipboardList, PlusCircle, AlertCircle } from 'lucide-react';
+import { GlassButton } from '../components/GlassButton.tsx';
 
 interface ResidentMyReportsScreenProps {
   db: AppDatabase;
@@ -61,14 +62,14 @@ export const ResidentMyReportsScreen: React.FC<ResidentMyReportsScreenProps> = (
           </p>
         </div>
 
-        <button
+        <GlassButton
           type="button"
           onClick={() => onNavigate('/report')}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-teal-800 hover:bg-teal-900 text-white text-xs sm:text-sm font-semibold transition focus:outline-hidden focus:ring-2 focus:ring-teal-700"
+          tone="teal" className="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold"
         >
           <PlusCircle className="w-4 h-4" />
           <span>Report New Issue</span>
-        </button>
+        </GlassButton>
       </div>
 
       {/* Reports List or Empty State */}
@@ -84,13 +85,13 @@ export const ResidentMyReportsScreen: React.FC<ResidentMyReportsScreenProps> = (
             When you submit a leak or water supply issue from the Report page, it will be listed here
             along with updates from the operator.
           </p>
-          <button
+          <GlassButton
             type="button"
             onClick={() => onNavigate('/report')}
-            className="px-4 py-2 rounded-md bg-teal-800 hover:bg-teal-900 text-white text-xs font-semibold transition"
+            tone="teal" className="px-4 py-2 text-xs font-semibold"
           >
             Submit your first report
-          </button>
+          </GlassButton>
         </div>
       ) : (
         <div className="space-y-3">
