@@ -47,3 +47,32 @@ nav.bg-slate-50 {
     scroll-behavior: auto !important;
   }
 }
+
+/* Premium motion: screens ease in, their top-level blocks rise in a short stagger.
+   Opacity and transform only; content is never hidden once the animation ends. */
+@keyframes jal-rise {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page-enter > * > * {
+    animation: jal-rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .page-enter > * > *:nth-child(2) { animation-delay: 50ms; }
+  .page-enter > * > *:nth-child(3) { animation-delay: 100ms; }
+  .page-enter > * > *:nth-child(4) { animation-delay: 150ms; }
+  .page-enter > * > *:nth-child(5) { animation-delay: 190ms; }
+  .page-enter > * > *:nth-child(n+6) { animation-delay: 220ms; }
+
+  /* Gentle hover lift on pointer devices for the role and shortcut cards on Home */
+  @media (hover: hover) and (pointer: fine) {
+    .page-enter [class*="rounded-lg"][class*="border"]:is(a, button):not(:disabled) {
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+    .page-enter [class*="rounded-lg"][class*="border"]:is(a, button):not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -10px rgba(15, 23, 42, 0.35);
+    }
+  }
+}om:
