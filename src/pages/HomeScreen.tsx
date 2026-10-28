@@ -7,7 +7,6 @@
 import React from 'react';
 import { UserRole } from '../data/types.ts';
 import { PLACEHOLDERS } from '../config/placeholders.ts';
-import { SampleBadge } from '../components/SampleBadge.tsx';
 import {
   Users,
   ShieldAlert,
@@ -39,7 +38,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-700 rounded border border-slate-200">
             {PLACEHOLDERS.villageName}
           </span>
-          <SampleBadge />
         </div>
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
           {PLACEHOLDERS.appName}
