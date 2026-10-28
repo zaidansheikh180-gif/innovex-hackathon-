@@ -12,6 +12,7 @@ import { addReport } from '../data/storage.ts';
 import { validateText } from '../lib/validation.ts';
 import { PLACEHOLDERS } from '../config/placeholders.ts';
 import { AlertTriangle, CheckCircle, ShieldAlert, ArrowRight } from 'lucide-react';
+import { GlassButton } from '../components/GlassButton.tsx';
 
 interface ResidentReportScreenProps {
   areas: Area[];
@@ -113,14 +114,14 @@ export const ResidentReportScreen: React.FC<ResidentReportScreenProps> = ({
             <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
             <span className="text-sm font-semibold">{successMessage}</span>
           </div>
-          <button
+          <GlassButton
             type="button"
             onClick={() => onNavigate('/my-reports')}
-            className="text-xs font-bold px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded transition flex items-center gap-1"
+            tone="teal" className="text-xs font-bold px-3 py-1.5 flex items-center gap-1"
           >
             <span>View in My Reports</span>
             <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          </GlassButton>
         </div>
       )}
 
@@ -233,13 +234,13 @@ export const ResidentReportScreen: React.FC<ResidentReportScreenProps> = ({
 
         {/* Submit Button with double-submit guard */}
         <div className="pt-2">
-          <button
+          <GlassButton
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto px-6 py-2.5 rounded-md font-semibold text-sm text-white bg-teal-800 hover:bg-teal-900 disabled:opacity-50 disabled:cursor-not-allowed transition focus:outline-hidden focus:ring-2 focus:ring-teal-600"
+            tone="teal" className="px-6 py-2.5 font-semibold text-sm" wrapperClassName="flex w-full sm:w-auto sm:inline-flex"
           >
             {isSubmitting ? 'Saving Report...' : 'Submit Report'}
-          </button>
+          </GlassButton>
         </div>
       </form>
     </div>
