@@ -1,4 +1,4 @@
-# Village Water Supply Tracker (hackathon demo)
+# JalSetu (hackathon demo)
 
 A browser-only web app for a village that shares one water supply. Residents see when water is planned and report problems. The water operator / panchayat records what was actually supplied, tracks complaints, and compares areas.
 
@@ -8,7 +8,7 @@ A browser-only web app for a village that shares one water supply. Residents see
 
 - **No backend, no server, no database, no login.** Everything is stored in this browser's `localStorage` on this one device. Nothing is sent over the network and nothing syncs between phones or laptops.
 - **The Resident / Operator choice is a demo switch, not security.** Anyone can switch roles, and the stored role can be edited in the browser. It is only there to show both views.
-- **Sample data is labelled.** The app starts with sample areas, schedules, supply logs, complaints and water-test entries, each marked "Sample Data". Names such as "[Placeholder] Village Water Supply" and "Sample area 1" are placeholders.
+- **Sample data is labelled.** The app starts with sample areas, schedules, supply logs, complaints and water-test entries, each marked "Sample Data". Names such as "Sample area 1" are placeholders. The village label "Malligehalli" is a display name only; the records are sample data, not real Malligehalli data.
 - **The app does not detect leaks or decide if water is safe.** Water-test results are text typed in from an external testing authority, shown with date and source.
 - Because data is local, reports made on one device are not visible on another. A real deployment would need a trusted backend and real accounts. That is not built here.
 
