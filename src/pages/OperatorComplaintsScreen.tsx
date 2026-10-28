@@ -73,7 +73,7 @@ export const OperatorComplaintsScreen: React.FC<OperatorComplaintsScreenProps> =
         </div>
         <p className="text-sm text-slate-600">
           Review community-reported water issues and advance or revise their status.
-          Status transitions are bidirectional (Proposed) to allow reopening or corrections.
+          Status transitions are bidirectional to allow reopening or corrections.
         </p>
       </div>
 
