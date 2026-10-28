@@ -13,6 +13,7 @@ import { StatusBadge } from '../components/StatusBadge.tsx';
 import { SampleBadge } from '../components/SampleBadge.tsx';
 import { formatISODateTime } from '../lib/dateUtils.ts';
 import { ClipboardList, Filter } from 'lucide-react';
+import { GlassButton } from '../components/GlassButton.tsx';
 
 interface OperatorComplaintsScreenProps {
   db: AppDatabase;
@@ -179,19 +180,15 @@ export const OperatorComplaintsScreen: React.FC<OperatorComplaintsScreenProps> =
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-xs font-semibold text-slate-600 mr-1">Set Status:</span>
                   {(['New', 'In progress', 'Resolved'] as ComplaintStatus[]).map((st) => (
-                    <button
+                    <GlassButton
                       key={st}
                       type="button"
                       disabled={report.status === st}
                       onClick={() => handleStatusChange(report.id, st)}
-                      className={`px-2.5 py-1 text-xs rounded border transition ${
-                        report.status === st
-                          ? 'bg-slate-800 text-white border-slate-800 font-bold opacity-100 cursor-default'
-                          : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
-                      }`}
+                      tone={report.status === st ? 'dark' : 'neutral'} className={`px-2.5 py-1 text-xs ${report.status === st ? 'font-bold' : ''}`}
                     >
                       {st}
-                    </button>
+                    </GlassButton>
                   ))}
                 </div>
               </div>
