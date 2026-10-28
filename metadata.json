@@ -1,5 +1,5 @@
 {
-  "name": "Village Water Supply (TBD)",
+  "name": "JalSetu",
   "description": "A browser-only community water distribution schedule, supply log, and complaint tracking application.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
