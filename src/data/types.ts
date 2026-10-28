@@ -1,6 +1,6 @@
 /**
  * @file types.ts
- * Data model types for the Village Water Supply app.
+ * Data model types for the JalSetu app.
  * Schema version: 1
  */
 
