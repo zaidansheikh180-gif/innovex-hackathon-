@@ -9,6 +9,7 @@ import { AppDatabase, Area } from '../data/types.ts';
 import { SampleBadge } from '../components/SampleBadge.tsx';
 import { formatTime24to12, formatISODateTime } from '../lib/dateUtils.ts';
 import { Clock, AlertCircle, Info, Calendar } from 'lucide-react';
+import { GlassButton } from '../components/GlassButton.tsx';
 
 interface ResidentScheduleScreenProps {
   db: AppDatabase;
@@ -169,13 +170,13 @@ export const ResidentScheduleScreen: React.FC<ResidentScheduleScreenProps> = ({
           <Info className="w-4 h-4 text-slate-500 shrink-0" />
           <span>Experiencing a leak, low pressure, or no water during scheduled supply?</span>
         </div>
-        <button
+        <GlassButton
           type="button"
           onClick={() => onNavigate('/report')}
-          className="w-full sm:w-auto px-4 py-2 rounded text-xs font-bold bg-amber-800 hover:bg-amber-900 text-white transition focus:outline-hidden focus:ring-2 focus:ring-amber-600"
+          tone="amber" className="px-4 py-2 text-xs font-bold" wrapperClassName="flex w-full sm:w-auto sm:inline-flex"
         >
           Submit Issue Report
-        </button>
+        </GlassButton>
       </div>
     </div>
   );
