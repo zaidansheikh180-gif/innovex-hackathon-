@@ -16,11 +16,12 @@ import {
   UserRole,
 } from './types.ts';
 import { INITIAL_SAMPLE_DATABASE } from './sampleData.ts';
-import { validateImportDatabase } from '../lib/validation.ts';
+import { validateImportDatabase, IMPORT_LIMITS } from '../lib/validation.ts';
 
 const STORAGE_KEY_DB = 'village_water_app_db_v1';
 const STORAGE_KEY_ROLE = 'village_water_app_role_v1';
 const STORAGE_KEY_MY_REPORTS = 'village_water_app_my_reports_v1';
+const STORAGE_KEY_BACKUP = 'village_water_app_db_backup_v1';
 
 export interface StorageError {
   type: 'CORRUPTED' | 'UNKNOWN_VERSION' | 'BLOCKED_OR_FULL' | 'VALIDATION_FAILED';
@@ -78,7 +79,19 @@ export function loadDatabase(): { db: AppDatabase | null; error?: StorageError }
       };
     }
 
-    return { db: parsed as AppDatabase };
+    // Stored data is untrusted input (users can edit browser storage): validate it like an import.
+    const checked = validateImportDatabase(parsed);
+    if (!checked.isValid || !checked.data) {
+      return {
+        db: null,
+        error: {
+          type: 'VALIDATION_FAILED',
+          message: `Stored data failed validation (${checked.error || 'unknown problem'}). Your stored data was not changed or deleted; a reset keeps a saved copy of it in this browser.`,
+        },
+      };
+    }
+
+    return { db: checked.data };
   } catch (err: any) {
     return {
       db: null,
@@ -95,7 +108,24 @@ export function loadDatabase(): { db: AppDatabase | null; error?: StorageError }
  */
 export function saveDatabase(db: AppDatabase): { success: boolean; error?: StorageError } {
   try {
-    localStorage.setItem(STORAGE_KEY_DB, JSON.stringify(db));
+    const check = validateImportDatabase(db);
+    if (!check.isValid) {
+      return {
+        success: false,
+        error: { type: 'VALIDATION_FAILED', message: `Change not saved: ${check.error}` },
+      };
+    }
+    const serialized = JSON.stringify(check.data);
+    const previous = localStorage.getItem(STORAGE_KEY_DB);
+    localStorage.setItem(STORAGE_KEY_DB, serialized);
+    // Read back to confirm the write really landed; otherwise restore the previous value.
+    if (localStorage.getItem(STORAGE_KEY_DB) !== serialized) {
+      if (previous !== null) localStorage.setItem(STORAGE_KEY_DB, previous);
+      return {
+        success: false,
+        error: { type: 'BLOCKED_OR_FULL', message: 'Browser storage did not confirm the write. Your data was left as it was.' },
+      };
+    }
     notifyListeners();
     return { success: true };
   } catch (err: any) {
@@ -110,12 +140,98 @@ export function saveDatabase(db: AppDatabase): { success: boolean; error?: Stora
   }
 }
 
+// ---------------------------------------------------------------------------
+// RECOVERY BACKUP (one previous copy, kept in this browser only)
+// ---------------------------------------------------------------------------
+
+export interface BackupInfo {
+  savedAt: string;
+  reason: 'import' | 'reset' | 'restore';
+  restorable: boolean;
+}
+
+/** Copies the current stored data (even if it is damaged) into a single recovery slot. */
+function backupCurrentData(reason: BackupInfo['reason']): { success: boolean; error?: string } {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DB);
+    if (raw === null) return { success: true };
+    const payload = JSON.stringify({
+      savedAt: new Date().toISOString(),
+      reason,
+      raw,
+      myReports: localStorage.getItem(STORAGE_KEY_MY_REPORTS),
+    });
+    localStorage.setItem(STORAGE_KEY_BACKUP, payload);
+    if (localStorage.getItem(STORAGE_KEY_BACKUP) !== payload) {
+      return { success: false, error: 'Could not confirm the recovery backup, so nothing was changed.' };
+    }
+    return { success: true };
+  } catch {
+    return { success: false, error: 'Browser storage is full, so a recovery backup could not be made and nothing was changed.' };
+  }
+}
+
+function readBackup(): { savedAt: string; reason: BackupInfo['reason']; raw: string; myReports: string | null } | null {
+  try {
+    const text = localStorage.getItem(STORAGE_KEY_BACKUP);
+    if (!text) return null;
+    const b = JSON.parse(text);
+    if (!b || typeof b.raw !== 'string' || typeof b.savedAt !== 'string') return null;
+    const reason = b.reason === 'import' || b.reason === 'reset' || b.reason === 'restore' ? b.reason : 'import';
+    return { savedAt: b.savedAt, reason, raw: b.raw, myReports: typeof b.myReports === 'string' ? b.myReports : null };
+  } catch {
+    return null;
+  }
+}
+
+export function getBackupInfo(): BackupInfo | null {
+  const b = readBackup();
+  if (!b) return null;
+  let restorable = false;
+  try {
+    restorable = b.raw.length <= IMPORT_LIMITS.maxJsonChars && validateImportDatabase(JSON.parse(b.raw)).isValid;
+  } catch {
+    restorable = false;
+  }
+  return { savedAt: b.savedAt, reason: b.reason, restorable };
+}
+
+/** Puts the previous copy back. The data being replaced becomes the new recovery copy. */
+export function restorePreviousData(): { success: boolean; error?: string } {
+  const b = readBackup();
+  if (!b) return { success: false, error: 'There is no previous copy to restore.' };
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(b.raw);
+  } catch {
+    return { success: false, error: 'The previous copy is damaged and cannot be restored.' };
+  }
+  const check = validateImportDatabase(parsed);
+  if (!check.isValid || !check.data) {
+    return { success: false, error: `The previous copy failed validation (${check.error}). Nothing was changed.` };
+  }
+  const backed = backupCurrentData('restore');
+  if (!backed.success) return { success: false, error: backed.error };
+  const res = saveDatabase(check.data);
+  if (!res.success) return { success: false, error: res.error?.message };
+  try {
+    if (b.myReports) localStorage.setItem(STORAGE_KEY_MY_REPORTS, b.myReports);
+    else localStorage.removeItem(STORAGE_KEY_MY_REPORTS);
+  } catch {
+    // ignore
+  }
+  notifyListeners();
+  return { success: true };
+}
+
 /**
  * Confirmed Full Reset to Sample Data.
  * Note: Individual deletions are forbidden; bulk replacement occurs only here or via JSON import.
  */
 export function resetToSampleData(): { success: boolean; error?: StorageError } {
   try {
+    const backed = backupCurrentData('reset');
+    if (!backed.success) return { success: false, error: { type: 'BLOCKED_OR_FULL', message: backed.error || 'Backup failed.' } };
     const sampleCopy = JSON.parse(JSON.stringify(INITIAL_SAMPLE_DATABASE));
     const result = saveDatabase(sampleCopy);
     if (result.success) {
@@ -149,6 +265,9 @@ export function exportDatabaseAsJSON(): string {
  * If validation fails or saving fails, current database is preserved completely unchanged.
  */
 export function importDatabaseFromJSON(jsonString: string): { success: boolean; error?: string } {
+  if (typeof jsonString !== 'string' || jsonString.length > IMPORT_LIMITS.maxJsonChars) {
+    return { success: false, error: 'File is too large to import (limit 2 MB).' };
+  }
   let rawParsed: unknown;
   try {
     rawParsed = JSON.parse(jsonString);
@@ -159,6 +278,12 @@ export function importDatabaseFromJSON(jsonString: string): { success: boolean; 
   const validation = validateImportDatabase(rawParsed);
   if (!validation.isValid || !validation.data) {
     return { success: false, error: validation.error || 'Validation failed for imported data.' };
+  }
+
+  // Keep a recoverable copy of the current data before replacing it.
+  const backed = backupCurrentData('import');
+  if (!backed.success) {
+    return { success: false, error: backed.error || 'Could not back up current data, so nothing was changed.' };
   }
 
   // Attempt save
@@ -381,7 +506,11 @@ export function getMyReportIds(): string[] {
     const raw = localStorage.getItem(STORAGE_KEY_MY_REPORTS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) {
+        return parsed
+          .filter((x): x is string => typeof x === 'string' && /^[A-Za-z0-9_-]{1,100}$/.test(x))
+          .slice(0, 1000);
+      }
     }
   } catch {
     // ignore
