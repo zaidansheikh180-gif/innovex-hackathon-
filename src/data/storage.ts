@@ -1,6 +1,6 @@
 /**
  * @file storage.ts
- * Centralized data storage layer for the browser-only Village Water Supply app.
+ * Centralized data storage layer for the browser-only JalSetu app.
  * All persistence uses localStorage. No backend or network requests are used.
  * Strictly respects the policy: NO INDIVIDUAL RECORD DELETION.
  */
@@ -15,7 +15,7 @@ import {
   ComplaintStatus,
   UserRole,
 } from './types.ts';
-import { INITIAL_SAMPLE_DATABASE } from './sampleData.ts';
+import { EMPTY_DATABASE } from './sampleData.ts';
 import { validateImportDatabase, IMPORT_LIMITS } from '../lib/validation.ts';
 
 const STORAGE_KEY_DB = 'village_water_app_db_v1';
@@ -44,14 +44,14 @@ function notifyListeners() {
 
 /**
  * Loads the current database from localStorage.
- * If not present, initializes with sample data.
+ * If not present, initializes an empty database.
  */
 export function loadDatabase(): { db: AppDatabase | null; error?: StorageError } {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_DB);
     if (!raw) {
-      // First run: initialize with sample data
-      const initial = JSON.parse(JSON.stringify(INITIAL_SAMPLE_DATABASE));
+      // First run: start empty (areas only, no records)
+      const initial = JSON.parse(JSON.stringify(EMPTY_DATABASE));
       localStorage.setItem(STORAGE_KEY_DB, JSON.stringify(initial));
       return { db: initial };
     }
@@ -225,14 +225,14 @@ export function restorePreviousData(): { success: boolean; error?: string } {
 }
 
 /**
- * Confirmed Full Reset to Sample Data.
+ * Confirmed full reset to an empty database.
  * Note: Individual deletions are forbidden; bulk replacement occurs only here or via JSON import.
  */
-export function resetToSampleData(): { success: boolean; error?: StorageError } {
+export function resetAllData(): { success: boolean; error?: StorageError } {
   try {
     const backed = backupCurrentData('reset');
     if (!backed.success) return { success: false, error: { type: 'BLOCKED_OR_FULL', message: backed.error || 'Backup failed.' } };
-    const sampleCopy = JSON.parse(JSON.stringify(INITIAL_SAMPLE_DATABASE));
+    const sampleCopy = JSON.parse(JSON.stringify(EMPTY_DATABASE));
     const result = saveDatabase(sampleCopy);
     if (result.success) {
       // Also clear my reports tracked list to match empty S-04 state on fresh reset
@@ -257,7 +257,7 @@ export function resetToSampleData(): { success: boolean; error?: StorageError } 
  */
 export function exportDatabaseAsJSON(): string {
   const { db } = loadDatabase();
-  return JSON.stringify(db || INITIAL_SAMPLE_DATABASE, null, 2);
+  return JSON.stringify(db || EMPTY_DATABASE, null, 2);
 }
 
 /**
