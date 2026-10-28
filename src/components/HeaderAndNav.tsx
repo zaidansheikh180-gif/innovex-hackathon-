@@ -39,7 +39,7 @@ export const HeaderAndNav: React.FC<HeaderAndNavProps> = ({
 }) => {
   const residentNavItems = [
     { path: '/schedule', label: 'Schedule', icon: Calendar },
-    { path: '/report', label: 'Report Issue', icon: AlertTriangle },
+    { path: '/report', label: 'Report', icon: AlertTriangle },
     { path: '/my-reports', label: 'My Reports', icon: ClipboardList },
     { path: '/water-tests', label: 'Water Tests', icon: FlaskConical },
     { path: '/data', label: 'Data', icon: Database },
@@ -48,7 +48,7 @@ export const HeaderAndNav: React.FC<HeaderAndNavProps> = ({
   const operatorNavItems = [
     { path: '/operator/supply', label: 'Supply Log', icon: Droplets },
     { path: '/operator/complaints', label: 'Complaints', icon: ClipboardList },
-    { path: '/operator/schedule', label: 'Manage Timings', icon: Sliders },
+    { path: '/operator/schedule', label: 'Timings', icon: Sliders },
     { path: '/operator/compare', label: 'Compare', icon: BarChart2 },
     { path: '/water-tests', label: 'Water Tests', icon: FlaskConical },
     { path: '/data', label: 'Data', icon: Database },
@@ -177,4 +177,4 @@ export const HeaderAndNav: React.FC<HeaderAndNavProps> = ({
       </nav>
     </>
   );
-};
+};d
