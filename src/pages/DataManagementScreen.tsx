@@ -2,7 +2,7 @@
  * @file DataManagementScreen.tsx
  * Screen S-10: /data
  * Export JSON, Import JSON (full replacement with strict pre-validation & overwrite warning),
- * and Confirmed Full Reset to Sample Data.
+ * and Confirmed Full Reset to Empty Data.
  * Strict policy: No individual record deletion. Focus returns to trigger upon modal dismiss.
  */
 
@@ -11,7 +11,7 @@ import { AppDatabase } from '../data/types.ts';
 import {
   exportDatabaseAsJSON,
   importDatabaseFromJSON,
-  resetToSampleData,
+  resetAllData,
   getBackupInfo,
   restorePreviousData,
 } from '../data/storage.ts';
@@ -175,12 +175,12 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
   };
 
   // -------------------------------------------------------------
-  // RESET TO SAMPLE DATA (Confirmed)
+  // RESET TO EMPTY DATA (Confirmed)
   // -------------------------------------------------------------
   const handleConfirmReset = () => {
     setIsProcessing(true);
     try {
-      const result = resetToSampleData();
+      const result = resetAllData();
       setIsProcessing(false);
       setIsResetModalOpen(false);
 
@@ -192,7 +192,7 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
       } else {
         setStatusMessage({
           type: 'success',
-          text: 'All records have been reset to initial sample data.',
+          text: 'All records have been reset to an empty database.',
         });
       }
     } catch (err: any) {
@@ -214,7 +214,7 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
           <span>Data Storage & Backup Settings</span>
         </h1>
         <p className="text-sm text-slate-600">
-          Export your records to move data between devices, restore from a verified JSON backup, or reset to initial sample data.
+          Export your records to move data between devices, restore from a verified JSON backup, or reset to an empty database.
         </p>
       </div>
 
@@ -269,7 +269,7 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
           </p>
           <p>
             <strong>Bulk Replacement Policy:</strong> Individual records cannot be deleted.
-            Bulk state changes occur exclusively through confirmed JSON Import or confirmed Sample Reset.
+            Bulk state changes occur exclusively through confirmed JSON Import or confirmed Reset.
           </p>
         </div>
       </div>
@@ -336,9 +336,9 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
             <div className="w-10 h-10 rounded-lg bg-rose-100 text-rose-800 flex items-center justify-center font-bold">
               <RefreshCw className="w-5 h-5" />
             </div>
-            <h2 className="text-sm font-bold text-slate-900">Reset to Sample Data</h2>
+            <h2 className="text-sm font-bold text-slate-900">Reset to Empty Data</h2>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Restore default sample schedules, notices, complaints, and test records. Replaces all user-added entries.
+              Clears all schedules, notices, reports, supply and water-test records. Areas stay. The current data is backed up first so you can undo it.
             </p>
           </div>
 
@@ -349,7 +349,7 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
             tone="roseSoft" className="py-2.5 px-3 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5" wrapperClassName="flex w-full"
           >
             <RefreshCw className="w-4 h-4" />
-            <span>Reset to Sample Data</span>
+            <span>Reset to Empty Data</span>
           </GlassButton>
         </div>
       </div>
@@ -405,22 +405,22 @@ export const DataManagementScreen: React.FC<DataManagementScreenProps> = ({ db }
         }}
       />
 
-      {/* Confirmation Modal: RESET TO SAMPLE DATA */}
+      {/* Confirmation Modal: RESET TO EMPTY DATA */}
       <ConfirmModal
         isOpen={isResetModalOpen}
-        title="Reset All Data to Sample Records?"
+        title="Reset All Data to Empty?"
         message={
           <div className="space-y-2 text-xs text-slate-700">
             <p>
-              Are you sure you want to restore the initial sample dataset?
+              Are you sure you want to clear all records on this device?
             </p>
             <p className="p-2.5 bg-slate-100 rounded text-slate-800">
               This will replace all user-entered reports, supply distributions, edited timings, and notices on
-              this device with the default sample data.
+              this device with an empty database.
             </p>
           </div>
         }
-        confirmLabel="Yes, Reset to Sample Data"
+        confirmLabel="Yes, Reset to Empty Data"
         cancelLabel="Cancel"
         isDestructive={true}
         isProcessing={isProcessing}
