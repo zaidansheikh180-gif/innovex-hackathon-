@@ -12,6 +12,7 @@ import { validateDurationMinutes, validateTime, validateDate } from '../lib/vali
 import { formatTime24to12, formatISODateOnly, getTodayDateString, getCurrentTimeString } from '../lib/dateUtils.ts';
 import { SampleBadge } from '../components/SampleBadge.tsx';
 import { Droplets, PlusCircle, CheckCircle, Clock } from 'lucide-react';
+import { GlassButton } from '../components/GlassButton.tsx';
 
 interface OperatorSupplyScreenProps {
   db: AppDatabase;
@@ -235,13 +236,13 @@ export const OperatorSupplyScreen: React.FC<OperatorSupplyScreenProps> = ({ db }
             </div>
           </div>
 
-          <button
+          <GlassButton
             type="submit"
             disabled={isSubmitting}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-md font-semibold text-sm text-white bg-teal-800 hover:bg-teal-900 disabled:opacity-50 disabled:cursor-not-allowed transition focus:outline-hidden focus:ring-2 focus:ring-teal-600"
+            tone="teal" className="px-5 py-2.5 font-semibold text-sm" wrapperClassName="flex w-full sm:w-auto sm:inline-flex"
           >
             {isSubmitting ? 'Saving Supply Record...' : 'Save Supply Record'}
-          </button>
+          </GlassButton>
         </form>
       </section>
 
