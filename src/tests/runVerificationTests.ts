@@ -39,6 +39,8 @@ import {
   importDatabaseFromJSON,
   resetToSampleData,
   getMyReportIds,
+  getBackupInfo,
+  restorePreviousData,
 } from '../data/storage.ts';
 import { INITIAL_SAMPLE_DATABASE } from '../data/sampleData.ts';
 
@@ -285,6 +287,88 @@ assert(
   updatedEntry?.dayOfWeek === 'Sunday' && updatedEntry?.durationMinutes === 120,
   'Test 14b: Schedule entry values reflect update without id change'
 );
+
+// -------------------------------------------------------------------------
+// TEST 15: Security hardening (import limits, strict schema, untrusted storage, recovery)
+// -------------------------------------------------------------------------
+const clone = () => JSON.parse(JSON.stringify(INITIAL_SAMPLE_DATABASE));
+const importErr = (mutate: (d: any) => void) => {
+  const d = clone();
+  mutate(d);
+  return validateImportDatabase(d);
+};
+const A = INITIAL_SAMPLE_DATABASE.areas[0].id;
+const mkRep = (extra: any = {}) => ({
+  id: 'rep-x', areaId: A, type: 'leak', status: 'New',
+  createdAt: '2026-10-25T08:00:00.000Z', updatedAt: '2026-10-25T08:00:00.000Z', ...extra,
+});
+
+assert(validateImportDatabase(clone()).isValid, 'Test 15a: sample database passes the strict schema');
+assert(!importErr((d) => { d.extra = 1; }).isValid, 'Test 15b: unknown top-level field rejected');
+assert(!importErr((d) => { d.reports.push(mkRep({ evil: 1 })); }).isValid, 'Test 15c: unknown record field rejected');
+assert(!importErr((d) => { d.reports.push(mkRep({ id: 'a b<script>' })); }).isValid, 'Test 15d: unsafe id rejected');
+assert(!importErr((d) => { d.reports.push(mkRep(), mkRep()); }).isValid, 'Test 15e: duplicate ids rejected');
+assert(!importErr((d) => { d.reports.push(mkRep({ areaId: 'nope' })); }).isValid, 'Test 15f: unknown area reference rejected');
+assert(!importErr((d) => { d.reports.push(mkRep({ type: 'x' })); }).isValid, 'Test 15g: bad report type rejected');
+assert(!importErr((d) => { d.reports.push(mkRep({ status: 'Done' })); }).isValid, 'Test 15h: bad status rejected');
+assert(!importErr((d) => { d.reports.push(mkRep({ createdAt: 'yesterday' })); }).isValid, 'Test 15i: bad timestamp rejected');
+assert(!importErr((d) => { d.reports.push(mkRep({ note: 5 })); }).isValid, 'Test 15j: non-text note rejected');
+assert(!importErr((d) => { d.reports.push(mkRep({ note: 'x'.repeat(501) })); }).isValid, 'Test 15k: over-long note rejected');
+assert(!importErr((d) => { d.reports.push(mkRep({ note: 'a\u0000b' })); }).isValid, 'Test 15l: control characters rejected');
+assert(!importErr((d) => { d.supplyRecords[0].date = '2026-02-31'; }).isValid, 'Test 15m: impossible calendar date rejected');
+assert(!importErr((d) => { d.supplyRecords[0].durationMinutes = 99999999; }).isValid, 'Test 15n: absurd duration rejected');
+assert(!importErr((d) => { d.supplyRecords[0].durationMinutes = '45'; }).isValid, 'Test 15o: string duration rejected');
+assert(!importErr((d) => { d.scheduleEntries[0].startTime = '25:00'; }).isValid, 'Test 15p: bad start time rejected');
+assert(!importErr((d) => { d.notices[0].isSample = 'yes'; }).isValid, 'Test 15q: non-boolean isSample rejected');
+assert(!importErr((d) => { d.areas[0].name = ''; }).isValid, 'Test 15r: empty area name rejected');
+assert(!importErr((d) => { d.waterTestResults[0].testedOn = 'x'; }).isValid, 'Test 15s: bad water test date rejected');
+assert(!importErr((d) => { d.reports = new Array(20001).fill(0).map((_, i) => mkRep({ id: 'r' + i })); }).isValid, 'Test 15t: collection size limit enforced');
+assert(!validateImportDatabase(JSON.parse('{"schemaVersion":1,"__proto__":{"x":1},"areas":[],"scheduleEntries":[],"notices":[],"supplyRecords":[],"reports":[],"waterTestResults":[]}')).isValid, 'Test 15u: __proto__ / empty areas rejected');
+assert(!validateImportDatabase([]).isValid && !validateImportDatabase(null).isValid, 'Test 15v: non-object roots rejected');
+const trimmed = validateImportDatabase(clone()).data!;
+assert(JSON.stringify(trimmed) === JSON.stringify(clone()), 'Test 15w: valid data round-trips unchanged (no silent loss)');
+
+// Oversized text is refused before parsing
+resetToSampleData();
+const beforeBig = localStorage.getItem('village_water_app_db_v1');
+const bigRes = importDatabaseFromJSON(' '.repeat(2 * 1024 * 1024 + 1));
+assert(!bigRes.success && localStorage.getItem('village_water_app_db_v1') === beforeBig, 'Test 15x: oversized import refused, data unchanged');
+const badRes = importDatabaseFromJSON('{"schemaVersion":1,"areas":[]}');
+assert(!badRes.success && localStorage.getItem('village_water_app_db_v1') === beforeBig, 'Test 15y: invalid import refused, data unchanged');
+
+// Untrusted stored data
+localStorage.setItem('village_water_app_db_v1', JSON.stringify({ ...clone(), reports: [mkRep({ status: 'Hacked' })] }));
+const tampered = loadDatabase();
+assert(tampered.db === null && tampered.error?.type === 'VALIDATION_FAILED', 'Test 15z: tampered stored data is rejected on load');
+assert(localStorage.getItem('village_water_app_db_v1')!.includes('Hacked'), 'Test 15aa: tampered data is not silently deleted');
+const savedBad = saveDatabase({ ...clone(), reports: [mkRep({ type: 'zzz' })] });
+assert(!savedBad.success, 'Test 15ab: invalid database cannot be saved');
+localStorage.setItem('village_water_app_my_reports_v1', JSON.stringify(['rep-ok', 5, { a: 1 }, '<img>']));
+assert(JSON.stringify(getMyReportIds()) === JSON.stringify(['rep-ok']), 'Test 15ac: tampered my-reports list is filtered');
+
+// Backup / recovery
+localStorage.clear();
+loadDatabase();
+const mine = addReport({ areaId: A, type: 'leak', note: 'before reset' });
+assert(mine.success, 'Test 16a: add a report to protect');
+resetToSampleData();
+const info = getBackupInfo();
+assert(!!info && info.restorable && info.reason === 'reset', 'Test 16b: reset leaves a restorable recovery copy');
+assert(!loadDatabase().db!.reports.some((r) => r.note === 'before reset'), 'Test 16c: reset removed the report');
+const rest = restorePreviousData();
+assert(rest.success && loadDatabase().db!.reports.some((r) => r.note === 'before reset'), 'Test 16d: restore brings the report back');
+assert(getMyReportIds().includes(mine.report!.id), 'Test 16e: restore also brings back My Reports tracking');
+assert(getBackupInfo()?.reason === 'restore', 'Test 16f: restore keeps the replaced data as the new recovery copy');
+// damaged stored data survives a reset as a recovery copy only if valid; raw is never lost silently
+localStorage.setItem('village_water_app_db_v1', '{broken');
+resetToSampleData();
+assert(JSON.parse(localStorage.getItem('village_water_app_db_backup_v1')!).raw === '{broken', 'Test 16g: damaged data is kept in the backup slot on reset');
+assert(getBackupInfo()?.restorable === false && !restorePreviousData().success, 'Test 16h: damaged backup is not restorable');
+// failed import keeps the old data
+resetToSampleData();
+addReport({ areaId: A, type: 'leak', note: 'keep me' });
+const keepRaw = localStorage.getItem('village_water_app_db_v1');
+assert(!importDatabaseFromJSON('{nope').success && localStorage.getItem('village_water_app_db_v1') === keepRaw, 'Test 16i: failed import leaves data untouched');
 
 console.log('\n--- VERIFICATION TEST SUMMARY ---');
 const total = results.length;
