@@ -8,9 +8,11 @@ A browser-only web app for a village that shares one water supply. Residents see
 
 - **No backend, no server, no database, no login.** Everything is stored in this browser's `localStorage` on this one device. Nothing is sent over the network and nothing syncs between phones or laptops.
 - **The Resident / Operator choice is a demo switch, not security.** Anyone can switch roles, and the stored role can be edited in the browser. It is only there to show both views.
-- **Sample data is labelled.** The app starts with sample areas, schedules, supply logs, complaints and water-test entries, each marked "Sample Data". Names such as "Sample area 1" are placeholders. The village label "Malligehalli" is a display name only; the records are sample data, not real Malligehalli data.
+- **Starts empty.** A new install has no schedules, notices, reports, supply logs or water tests. Only three generic area names ("Area 1" to "Area 3") are configured, because forms need an area and there is no area-management screen yet. The village label "Malligehalli" is a display name only; no real Malligehalli records or official affiliation are implied. Anything you enter is your own test or demo data and stays in this browser.
 - **The app does not detect leaks or decide if water is safe.** Water-test results are text typed in from an external testing authority, shown with date and source.
 - Because data is local, reports made on one device are not visible on another. A real deployment would need a trusted backend and real accounts. That is not built here.
+
+The app uses the Plus Jakarta Sans font (SIL Open Font License), bundled in the app so it needs no internet.
 
 ## Requirements
 
@@ -51,7 +53,17 @@ npm run lint
 
 `npm test` runs 76 automated checks (rules for supply/duration/date validation, saving, import/export/reset, strict import validation, size limits, tampered-storage handling, recovery backup). `npm run lint` runs the TypeScript type check.
 
-## How to use it (demo walkthrough)
+## 60-second live demo
+
+The app starts empty, so enter a few records live (this also shows nothing is faked):
+
+1. Home, **Enter as Operator**. In **Timings**, add a slot (area, day, start time, minutes) and post a delay notice.
+2. **Supply Log**: record today's supply for an area.
+3. Switch to Resident from the header. **Schedule** shows that area's timing and notice. **Report**: file a leak report.
+4. Switch back to Operator. **Complaints**: move the report to In progress, then Resolved. **Compare** shows the per-area totals.
+5. **Water Tests**: log a result entered from a testing authority. **Data**: export the JSON backup.
+
+## How to use it (screen by screen)
 
 1. Open the app. On the home screen choose **Enter as Resident** or **Enter as Operator**. You can switch at any time with the button in the header.
 2. **Resident**
@@ -62,10 +74,10 @@ npm run lint
 3. **Operator / Panchayat**
    - **Supply Log** (`/#/operator/supply`): record actual supply (area, date, start time, whole minutes). The newest entry appears first in that area's history.
    - **Complaints** (`/#/operator/complaints`): change a report's status between New, In progress and Resolved.
-   - **Manage Timings** (`/#/operator/schedule`): add or edit planned schedule slots and post delay notices.
+   - **Timings** (`/#/operator/schedule`): add or edit planned schedule slots and post delay notices.
    - **Compare** (`/#/operator/compare`): per-area totals for logged supplies, total duration, complaints, status and type breakdown.
    - **Water Tests**: add a test result with date, source and result text.
-4. **Data** (`/#/data`): export all data as a JSON file, import a JSON backup (strictly validated, confirmation required), reset to sample data (confirmation required), and **Restore Previous Data** (one previous copy is kept in this browser before every import or reset).
+4. **Data** (`/#/data`): export all data as a JSON file, import a JSON backup (strictly validated, confirmation required), reset to an empty database (confirmation required), and **Restore Previous Data** (one previous copy is kept in this browser before every import or reset).
 
 Rule built into the app: individual records cannot be deleted. Data is replaced in bulk only through a confirmed import or reset.
 
@@ -78,10 +90,11 @@ Rule built into the app: individual records cannot be deleted. Data is replaced 
 | `src/components/*` | Header/navigation, confirmation modal, status badge, glass-style `GlassButton` |
 | `src/data/types.ts` | Data model (areas, schedule entries, notices, supply records, reports, water tests) |
 | `src/data/storage.ts` | All `localStorage` reads and writes, export/import/reset, recovery backup |
-| `src/data/sampleData.ts` | The labelled sample data |
+| `src/data/sampleData.ts` | The empty starting database (areas only) |
+| `src/tests/fixtureData.ts` | Test-only fixture records, not used by the app |
 | `src/lib/validation.ts` | Form validation and the strict import/stored-data validator with size limits |
 | `src/tests/runVerificationTests.ts` | The automated tests (`npm test`) |
-| `src/config/placeholders.ts` | Placeholder labels and text limits in one place |
+| `src/config/placeholders.ts` | App name, tagline, village label, area names, disclaimers and text limits in one place |
 
 Built with React 19, TypeScript, Vite, and Tailwind CSS. Icons from lucide-react.
 
