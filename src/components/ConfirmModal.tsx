@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import { GlassButton } from './GlassButton.tsx';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -77,27 +78,23 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <div className="text-sm text-slate-700 leading-relaxed">{message}</div>
 
         <div className="flex flex-col sm:flex-row-reverse sm:justify-end gap-3 pt-3">
-          <button
+          <GlassButton
             ref={confirmButtonRef}
             type="button"
             disabled={isProcessing}
             onClick={onConfirm}
-            className={`w-full sm:w-auto px-4 py-2.5 rounded font-medium text-sm text-white transition-colors focus:ring-2 focus:ring-offset-2 ${
-              isDestructive
-                ? 'bg-rose-700 hover:bg-rose-800 focus:ring-rose-600'
-                : 'bg-teal-700 hover:bg-teal-800 focus:ring-teal-600'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            tone={isDestructive ? 'rose' : 'teal'} className="px-4 py-2.5 font-medium text-sm" wrapperClassName="flex w-full sm:inline-flex sm:w-auto"
           >
             {isProcessing ? 'Processing...' : confirmLabel}
-          </button>
-          <button
+          </GlassButton>
+          <GlassButton
             type="button"
             disabled={isProcessing}
             onClick={onCancel}
-            className="w-full sm:w-auto px-4 py-2.5 rounded font-medium text-sm text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-colors focus:ring-2 focus:ring-slate-400 disabled:opacity-50"
+            tone="neutral" className="px-4 py-2.5 font-medium text-sm" wrapperClassName="flex w-full sm:w-auto sm:inline-flex"
           >
             {cancelLabel}
-          </button>
+          </GlassButton>
         </div>
       </div>
     </div>
