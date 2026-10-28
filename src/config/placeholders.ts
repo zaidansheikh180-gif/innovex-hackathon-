@@ -31,7 +31,7 @@ export const PLACEHOLDERS = {
 
   // Visual Design Tokens (Status: TBD - Neutral Placeholders)
   designTokens: {
-    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontFamily: '"Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
     primaryColor: '#0f766e', // Calm teal placeholder
     primaryHover: '#115e59',
     surfaceBg: '#f8fafc',    // Slate 50
