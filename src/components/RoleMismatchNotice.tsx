@@ -7,6 +7,7 @@
 import React from 'react';
 import { UserRole } from '../data/types.ts';
 import { ArrowLeftRight, Info } from 'lucide-react';
+import { GlassButton } from './GlassButton.tsx';
 
 interface RoleMismatchNoticeProps {
   requiredRole: UserRole;
@@ -38,21 +39,21 @@ export const RoleMismatchNotice: React.FC<RoleMismatchNoticeProps> = ({
       </div>
 
       <div className="pt-2 flex flex-col sm:flex-row gap-3">
-        <button
+        <GlassButton
           type="button"
           onClick={() => onSwitchRole(requiredRole)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-amber-800 hover:bg-amber-900 text-white font-medium text-sm transition focus:ring-2 focus:ring-amber-600 focus:outline-hidden"
+          tone="amber" className="inline-flex items-center justify-center gap-2 px-4 py-2.5 font-medium text-sm"
         >
           <ArrowLeftRight className="w-4 h-4" />
           <span>Switch demo role to {requiredRole === 'operator' ? 'Operator' : 'Resident'}</span>
-        </button>
-        <button
+        </GlassButton>
+        <GlassButton
           type="button"
           onClick={onGoHome}
-          className="px-4 py-2.5 rounded-md bg-white border border-amber-300 text-amber-950 font-medium text-sm hover:bg-amber-100 transition focus:outline-hidden focus:ring-2 focus:ring-amber-500"
+          tone="amberSoft" className="px-4 py-2.5 font-medium text-sm"
         >
           Back to Home
-        </button>
+        </GlassButton>
       </div>
 
       <p className="text-xs text-amber-700 border-t border-amber-200/80 pt-2">
