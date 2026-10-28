@@ -213,7 +213,7 @@ export default function App() {
           className="w-full h-full object-cover object-bottom md:object-[center_70%] select-none"
         />
         {/* Minimum overlay so the illustration is clearly visible while keeping text contrast high */}
-        <div className="absolute inset-0 bg-slate-900/5 backdrop-blur-[0.5px]" />
+        <div className="absolute inset-0 bg-slate-900/5" />
       </div>
 
       {/* Shell Header & Nav */}
