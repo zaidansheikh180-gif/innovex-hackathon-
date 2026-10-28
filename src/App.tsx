@@ -29,6 +29,7 @@ import { WaterTestsScreen } from './pages/WaterTestsScreen.tsx';
 import { DataManagementScreen } from './pages/DataManagementScreen.tsx';
 import { AlertOctagon, RefreshCw } from 'lucide-react';
 import { GlassButton } from './components/GlassButton.tsx';
+import { CursorGlow } from './components/CursorGlow.tsx';
 
 function normalizePath(hashOrPath: string): string {
   // If hash routing is used (e.g., #/schedule), extract after #
@@ -227,8 +228,11 @@ export default function App() {
 
       {/* Main Screen Container with padding bottom for phone nav */}
       <main className="flex-1 max-w-6xl w-full mx-auto p-4 sm:p-6 pb-20 md:pb-12">
-        {renderContent()}
+        <div key={currentPath} className="page-enter">
+          {renderContent()}
+        </div>
       </main>
+      <CursorGlow />
 
       {/* Footer */}
       <footer className="border-t border-slate-200/80 bg-white text-slate-600 text-xs py-4 px-4 text-center hidden md:block">
